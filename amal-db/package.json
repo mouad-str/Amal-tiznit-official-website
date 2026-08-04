@@ -1,0 +1,11 @@
+{
+    "name": "amal-db",
+    "version": "1.0.0",
+    "description": "Isolated MySQL database layer for Amal Tiznit website",
+    "private": true,
+    "dependencies": {
+        "bcryptjs": "^3.0.3",
+        "dotenv": "^16.3.1",
+        "mysql2": "^3.6.5"
+    }
+}

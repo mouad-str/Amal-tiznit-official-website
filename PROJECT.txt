@@ -1,0 +1,536 @@
+================================================================================
+  AMAL TIZNIT OFFICIAL WEBSITE — PROJECT DESCRIPTION
+  اتحاد الرياضي أمل تيزنيت — الموقع الرسمي
+================================================================================
+
+  Version   : 1.0.0
+  Created   : 2026
+  Location  : Tiznit, Morocco
+  Type      : Full-Stack Web Application (Monorepo)
+
+================================================================================
+  IDEA & VISION
+================================================================================
+
+  Amal Tiznit (officially "Ittihad al-Riyadi Amal Tiznit", abbreviated USAT)
+  is a Moroccan football club based in the city of Tiznit, in the Souss-Massa
+  region. This project is the official digital home of the club.
+
+  The idea is to build a modern, professional football club website that:
+
+  - Represents the club's identity online with a premium design
+  - Keeps fans informed: news, match schedules, and live scores
+  - Lets supporters buy tickets to upcoming matches online
+  - Runs an official merchandise shop for kits, scarves, and accessories
+  - Provides a fully-featured admin panel for club staff to manage all content
+    without needing any technical knowledge
+
+  The site is designed to be fast, visually striking, mobile-friendly, and
+  fully data-driven — every piece of content (players, matches, news, products,
+  tickets) is stored in a real MySQL database and managed through a secure
+  admin panel.
+
+================================================================================
+  PROJECT STRUCTURE
+================================================================================
+
+  amal-tiznit-official-website/
+  │
+  ├── amal-db/              ← Isolated database layer (MySQL only)
+  │   ├── db.js             ← MySQL connection pool (shared by backend)
+  │   ├── init.js           ← Creates all tables + seeds default data
+  │   ├── migrate.js        ← Schema migrations
+  │   ├── package.json      ← Own dependencies (mysql2, bcryptjs, dotenv)
+  │   └── README.md         ← Database documentation
+  │
+  ├── backend/              ← REST API Server (Node.js + Express)
+  │   ├── config/db.js      ← Re-exports from amal-db/db.js
+  │   ├── controllers/      ← Business logic per resource
+  │   ├── routes/           ← Express route definitions
+  │   ├── middleware/       ← JWT authentication middleware
+  │   ├── scripts/          ← Utility scripts
+  │   ├── server.js         ← App entry point
+  │   ├── .env              ← Environment configuration
+  │   └── package.json
+  │
+  ├── frontend/             ← React SPA (Vite + TypeScript)
+  │   ├── pages/            ← All page components
+  │   │   ├── Home.tsx
+  │   │   ├── Players.tsx
+  │   │   ├── Matches.tsx
+  │   │   ├── News.tsx
+  │   │   ├── NewsDetail.tsx
+  │   │   ├── Shop.tsx
+  │   │   ├── Tickets.tsx
+  │   │   ├── Contact.tsx
+  │   │   ├── Login.tsx
+  │   │   └── Admin/        ← Protected admin pages
+  │   │       ├── Dashboard.tsx
+  │   │       ├── ManagePlayers.tsx
+  │   │       ├── ManageMatches.tsx
+  │   │       ├── ManageNews.tsx
+  │   │       ├── ManageShop.tsx
+  │   │       ├── ManageOrders.tsx
+  │   │       ├── ManageTickets.tsx
+  │   │       ├── ManageTicketSettings.tsx
+  │   │       ├── ManageContacts.tsx
+  │   │       └── ProfileSettings.tsx
+  │   ├── components/       ← Shared UI components
+  │   │   ├── Navbar.tsx
+  │   │   ├── Footer.tsx
+  │   │   ├── AdminLayout.tsx
+  │   │   ├── SplashScreen.tsx
+  │   │   ├── NotificationDropdown.tsx
+  │   │   ├── Modal.tsx
+  │   │   ├── ProtectedRoute.tsx
+  │   │   └── ScrollToTop.tsx
+  │   ├── contexts/         ← React context providers
+  │   │   └── AuthContext.tsx
+  │   ├── api.ts            ← Central API client + TypeScript interfaces
+  │   ├── types.ts          ← Shared TypeScript types
+  │   ├── constants.tsx     ← Brand colors, icons, static assets
+  │   ├── ticketConfig.ts   ← Fallback ticket configuration
+  │   ├── App.tsx           ← Router + layout composition
+  │   ├── index.tsx         ← App entry point
+  │   └── vite.config.ts    ← Vite build configuration
+  │
+  └── package.json          ← Root: runs both frontend + backend together
+
+================================================================================
+  TECHNOLOGY STACK
+================================================================================
+
+  FRONTEND
+  ─────────────────────────────────────────────────────
+  Framework     : React 19
+  Language      : TypeScript 5.8
+  Build Tool    : Vite 6
+  Router        : React Router DOM v7
+  Icons         : Lucide React
+  Styling       : Vanilla CSS (custom design system)
+  HTTP Client   : Native fetch (wrapped in typed API layer)
+  State         : React useState + useEffect + Context API
+  Port          : 3000
+
+  BACKEND
+  ─────────────────────────────────────────────────────
+  Runtime       : Node.js v24
+  Framework     : Express.js 4
+  Language      : JavaScript (CommonJS)
+  Auth          : JSON Web Tokens (JWT) via jsonwebtoken
+  Password Hash : bcryptjs
+  File Watching : Nodemon (dev mode)
+  Port          : 5000
+
+  DATABASE (isolated in amal-db/)
+  ─────────────────────────────────────────────────────
+  Engine        : MySQL 5.7 / 8.x (running via XAMPP)
+  Driver        : mysql2 (with Promise/pool support)
+  Host          : localhost:3306
+  Database name : amal_tiznit_db
+  Location      : C:\xampp\mysql\data\amal_tiznit_db\
+
+  DEV TOOLING
+  ─────────────────────────────────────────────────────
+  concurrently  : Run frontend + backend together from root
+  dotenv        : Environment variable management
+  cors          : Cross-origin request handling
+
+================================================================================
+  DATABASE TABLES
+================================================================================
+
+  Table               | Description
+  ─────────────────────────────────────────────────────────────────────────────
+  players             | Squad player profiles & statistics
+  matches             | Fixtures: upcoming and finished matches
+  news                | Club news articles with images & categories
+  products            | Merchandise shop items (kits, accessories, training)
+  tickets             | Ticket categories per match (VIP, Standard, Economy)
+  orders              | Customer purchase orders
+  order_items         | Individual line items per order
+  contacts            | Contact form submissions from fans
+  admins              | Admin panel user accounts
+  ticket_settings     | Configurable settings for the ticket page
+  users               | Legacy user table (kept for compatibility)
+
+================================================================================
+  PUBLIC PAGES & FEATURES
+================================================================================
+
+  HOME PAGE  (/)
+  ─────────────────────────────────────────────────────
+  - Full-screen hero section with club background image and call-to-action
+  - Live fetch of latest 3 news articles from the database
+  - Navigation to all key sections of the site
+  - Club branding: logo, colors (Royal Blue #0055b3, Red #e63946, Dark Navy)
+  - Splash screen animation on first load
+
+  PLAYERS PAGE  (/players)
+  ─────────────────────────────────────────────────────
+  - Full squad roster loaded from MySQL database
+  - Player cards with: photo, name, position, jersey number
+  - Detailed stats: matches played, goals, assists, minutes played,
+    yellow cards, red cards
+  - Filter by position: Goalkeeper, Defender, Midfielder, Forward
+  - Nationality display
+  - Responsive grid layout
+
+  MATCHES PAGE  (/matches)
+  ─────────────────────────────────────────────────────
+  - Full fixture list (upcoming & finished) from the database
+  - Upcoming matches: date, time, stadium, home/away indicator
+  - Finished matches: final score display with result styling
+  - Status badges: UPCOMING / FINISHED
+  - Match date and time formatted per locale
+
+  NEWS PAGE  (/news)
+  ─────────────────────────────────────────────────────
+  - Article grid loaded from MySQL
+  - Each card shows: image, category badge, title, date, summary
+  - Category-based display (Training, Transfer, Youth, Infrastructure, etc.)
+  - Click to open full article
+
+  NEWS DETAIL PAGE  (/news/:id)
+  ─────────────────────────────────────────────────────
+  - Full article view fetched from API by ID
+  - Hero image, category, publication date
+  - Full article text
+
+  TICKETS PAGE  (/tickets)
+  ─────────────────────────────────────────────────────
+  - Lists upcoming matches with available ticket categories per match
+  - Three seat tiers: VIP, Standard, Economy
+  - Real-time quantity availability from database
+  - Price display in Moroccan Dirhams (DH)
+  - Ticket selection flow (payment integration ready but pending)
+  - Season ticket package information
+  - Dynamic branding: title, team name, logos, sponsors loaded from DB settings
+  - Fallback to static config if API is unavailable
+
+  SHOP PAGE  (/shop)
+  ─────────────────────────────────────────────────────
+  - Full merchandise catalog loaded from MySQL
+  - Product cards: image, name, price, category, stock indicator
+  - Category filter (Kits, Training, Accessories, etc.)
+  - Price range filter slider
+  - Add to Cart functionality with quantity management
+  - Slide-in cart drawer: item list, quantity controls, remove items
+  - Multi-step checkout flow:
+      Step 1 — Cart review
+      Step 2 — Customer details form (name, phone, email, address)
+      Step 3 — Order confirmation + success screen
+  - Full order submitted to backend API (stored in orders + order_items tables)
+  - Stock deduction on successful order
+
+  CONTACT PAGE  (/contact)
+  ─────────────────────────────────────────────────────
+  - Contact form: name, email, message
+  - Submission stored directly in MySQL contacts table via API
+  - Club address, phone, email, social links displayed
+  - Map or location information
+
+================================================================================
+  ADMIN PANEL  (/admin)
+================================================================================
+
+  Secure, JWT-protected back-office for club staff.
+
+  ACCESS
+  ─────────────────────────────────────────────────────
+  - Login page at /admin/login with email + password authentication
+  - JWT token stored in localStorage for session persistence
+  - ProtectedRoute component wraps all admin pages — redirects to login
+    if not authenticated
+  - Default credentials: admin@amaltiznit.com / admin123
+
+  DASHBOARD  (/admin/dashboard)
+  ─────────────────────────────────────────────────────
+  - Overview stats cards: Total Players, Upcoming Matches, News Articles,
+    Shop Products
+  - Live counts fetched in parallel from all APIs on load
+  - Quick navigation links to all management sections
+  - Notification dropdown for alerts
+
+  MANAGE PLAYERS  (/admin/players)
+  ─────────────────────────────────────────────────────
+  - Full CRUD: Create, Read, Update, Delete players
+  - Form fields: name, position, jersey number, image (URL or base64 upload),
+    nationality, stats (goals, assists, minutes, yellow/red cards)
+  - Live preview of player photos
+
+  MANAGE MATCHES  (/admin/matches)
+  ─────────────────────────────────────────────────────
+  - Full CRUD for fixtures
+  - Fields: opponent, date/time, stadium, home/away toggle, status, score
+  - Update scores for finished matches
+
+  MANAGE NEWS  (/admin/news)
+  ─────────────────────────────────────────────────────
+  - Full CRUD for news articles
+  - Fields: title, category, body text, image (URL or upload), publish date
+  - Rich content management for club announcements
+
+  MANAGE SHOP  (/admin/shop)
+  ─────────────────────────────────────────────────────
+  - Full CRUD for merchandise products
+  - Fields: name, price, category, stock quantity, image
+
+  MANAGE ORDERS  (/admin/orders)
+  ─────────────────────────────────────────────────────
+  - View all customer orders with full item details
+  - Order status management: pending → confirmed → shipped → delivered → cancelled
+  - Customer details: name, email, phone, address
+  - Order total and line items display
+
+  MANAGE TICKETS  (/admin/tickets)
+  ─────────────────────────────────────────────────────
+  - Full CRUD for ticket categories per match
+  - Fields: match, seat category (VIP/Standard/Economy), price, quantity available
+
+  MANAGE TICKET SETTINGS  (/admin/settings/tickets)
+  ─────────────────────────────────────────────────────
+  - Configure the public Tickets page appearance
+  - Editable: title text, sub-title prefix, team branding, sponsor logos
+  - Changes saved to MySQL ticket_settings table, instantly reflected on frontend
+
+  MANAGE CONTACTS  (/admin/contacts)
+  ─────────────────────────────────────────────────────
+  - View all contact form submissions from fans
+  - See: sender name, email, message, date received
+  - Delete processed messages
+
+  PROFILE SETTINGS  (/admin/profile)
+  ─────────────────────────────────────────────────────
+  - Update admin account name, email
+  - Change password (with bcrypt hashing)
+
+================================================================================
+  API ENDPOINTS (Backend REST API)
+================================================================================
+
+  Base URL: http://localhost:5000/api
+
+  PLAYERS
+    GET    /players            → List all players
+    GET    /players/:id        → Get player by ID
+    POST   /players            → Create player
+    PUT    /players/:id        → Update player
+    DELETE /players/:id        → Delete player
+
+  MATCHES
+    GET    /matches            → List all matches
+    GET    /matches/:id        → Get match by ID
+    POST   /matches            → Create match
+    PUT    /matches/:id        → Update match
+    DELETE /matches/:id        → Delete match
+
+  NEWS
+    GET    /news               → List all articles
+    GET    /news/:id           → Get article by ID
+    POST   /news               → Create article
+    PUT    /news/:id           → Update article
+    DELETE /news/:id           → Delete article
+
+  SHOP
+    GET    /shop               → List all products
+    GET    /shop/:id           → Get product by ID
+    POST   /shop               → Create product
+    PUT    /shop/:id           → Update product
+    DELETE /shop/:id           → Delete product
+
+  TICKETS
+    GET    /tickets            → List all tickets
+    GET    /tickets/match/:id  → Get tickets for a specific match
+    POST   /tickets            → Create ticket category
+    PUT    /tickets/:id        → Update ticket
+    DELETE /tickets/:id        → Delete ticket
+
+  ORDERS
+    POST   /orders             → Place a new order (public)
+    GET    /orders             → List all orders (admin only)
+    PUT    /orders/:id/status  → Update order status (admin only)
+
+  CONTACT
+    GET    /contact            → List all messages (admin only)
+    POST   /contact            → Submit contact form (public)
+    DELETE /contact/:id        → Delete message (admin only)
+
+  SETTINGS
+    GET    /settings/ticket    → Get ticket page settings
+    PUT    /settings/ticket    → Update ticket page settings (admin only)
+
+  AUTH
+    POST   /auth/login         → Admin login → returns JWT
+    GET    /auth/me            → Get current admin profile
+    PUT    /auth/profile       → Update admin profile
+
+  SYSTEM
+    GET    /                   → Redirects to frontend (localhost:3000)
+    GET    /api/health         → Health check { status: 'OK' }
+
+================================================================================
+  SECURITY
+================================================================================
+
+  - JWT-based authentication for all admin routes
+  - Passwords stored as bcrypt hashes (saltRounds: 10)
+  - CORS restricted to: localhost:3000, localhost:5173, localhost:3001
+  - ProtectedRoute React component blocks unauthorized admin access
+  - Token stored in localStorage with Bearer authorization header
+
+================================================================================
+  NPM SCRIPTS
+================================================================================
+
+  FROM PROJECT ROOT:
+    npm run dev             → Start both frontend + backend concurrently
+    npm run dev:frontend    → Start frontend only (port 3000)
+    npm run dev:backend     → Start backend only (port 5000)
+    npm run install:all     → Install all dependencies (root + backend + frontend)
+
+  FROM backend/:
+    npm run dev             → Start backend with nodemon (auto-restart)
+    npm run start           → Start backend without nodemon
+    npm run seed            → Initialize database + seed all default data
+    npm run db:init         → Same as seed
+    npm run db:migrate      → Run schema migrations
+
+  FROM amal-db/:
+    node init.js            → Create tables + seed data
+    node migrate.js         → Run migrations
+
+================================================================================
+  ENVIRONMENT VARIABLES  (backend/.env)
+================================================================================
+
+  # Database
+  DB_HOST=localhost
+  DB_PORT=3306
+  DB_USER=root
+  DB_PASSWORD=
+  DB_NAME=amal_tiznit_db
+
+  # Server
+  PORT=5000
+
+================================================================================
+  DEFAULT DATA SEEDED ON FIRST RUN
+================================================================================
+
+  PLAYERS (8):
+    - Karim Alaoui        (Goalkeeper, #1)
+    - Youssef El Amrani   (Defender, #4)
+    - Mehdi Benkirane     (Midfielder, #8)
+    - Sofiane Rahimi      (Forward, #7)  — top scorer: 12 goals
+    - Hamza Mendyl        (Defender, #12)
+    - Omar Ati-Allah      (Midfielder, #10)
+    - Zakaria Hadraf      (Forward, #11)
+    - Anas Zniti          (Goalkeeper, #22)
+
+  MATCHES (4):
+    - Hassania Agadir     (Home, Upcoming)
+    - Raja Casablanca     (Away, Upcoming)
+    - Wydad AC            (Home, Finished — W 1-0)
+    - AS FAR              (Away, Finished — D 2-2)
+
+  NEWS ARTICLES (4):
+    - Training Camp in Ifrane
+    - New Striker Signing
+    - Youth Academy Trials
+    - Stadium Upgrades
+
+  PRODUCTS (4):
+    - Home Kit 2025/26    (450 DH)
+    - Away Kit 2025/26    (450 DH)
+    - Training Top        (300 DH)
+    - Supporter Scarf     (150 DH)
+
+  TICKETS:
+    - VIP, Standard, Economy for each upcoming match
+
+  ADMIN:
+    - Email: admin@amaltiznit.com
+    - Password: admin123  ← change immediately in production!
+
+  TICKET SETTINGS:
+    - Title: الاتحاد الرياضي أمل تيزنيت
+    - Team name: USAT
+    - Sponsors: Samsung, Amazon, Nike, Tesla logos
+
+================================================================================
+  BRAND IDENTITY
+================================================================================
+
+  Club Name (Arabic)    : الاتحاد الرياضي أمل تيزنيت
+  Club Name (French)    : Ittihad Al-Riyadi Amal Tiznit
+  Abbreviation          : USAT
+  City                  : Tiznit, Morocco (Souss-Massa region)
+  Primary Color         : Royal Blue   #0055b3
+  Secondary Color       : Dark Navy    #003d80
+  Accent Color          : Red          #e63946
+  Dark Background       : #001226
+  Light Background      : #f8fafc
+
+================================================================================
+  FEATURES SUMMARY
+================================================================================
+
+  ✅ Public website with 7 pages
+  ✅ Full squad roster with stats
+  ✅ Match fixtures (upcoming + results)
+  ✅ News & articles with categories
+  ✅ Online ticket browsing (per match, per category)
+  ✅ Online merchandise shop with cart + checkout
+  ✅ Order placement + backend stock management
+  ✅ Contact form with DB storage
+  ✅ Splash screen animation
+  ✅ Fully protected admin panel with JWT auth
+  ✅ Admin dashboard with live stats
+  ✅ CRUD for Players, Matches, News, Products, Tickets, Orders
+  ✅ Admin notifications dropdown
+  ✅ Ticket settings configurable from admin
+  ✅ Order status workflow
+  ✅ Admin profile & password management
+  ✅ Isolated MySQL database layer (amal-db/)
+  ✅ Monorepo: run entire stack with one command
+
+  🔜 Planned / Upcoming Features:
+  - Live match scores (WebSocket real-time updates)
+  - Arabic / French multilingual support
+  - Email notifications (Nodemailer)
+  - Real payment integration (CMI, Stripe, PayPal)
+  - Player statistics charts & visualizations
+  - Match calendar export (.ics / Google Calendar)
+  - PWA support (installable on mobile)
+  - Admin analytics dashboard with charts
+  - Search & filter on news, players, shop
+
+================================================================================
+  HOW TO RUN
+================================================================================
+
+  Prerequisites:
+  - Node.js v18+
+  - XAMPP (MySQL running on port 3306)
+  - npm
+
+  Step 1 — Install dependencies:
+    npm run install:all
+
+  Step 2 — Initialize the database:
+    cd backend
+    npm run seed
+
+  Step 3 — Start the application:
+    cd ..
+    npm run dev
+
+  Step 4 — Open browser:
+    Frontend  →  http://localhost:3000
+    Admin     →  http://localhost:3000/#/admin/login
+    API       →  http://localhost:5000/api/health
+
+================================================================================
+  END OF FILE
+================================================================================

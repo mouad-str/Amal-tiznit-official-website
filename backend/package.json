@@ -1,0 +1,24 @@
+{
+    "name": "amal-tiznit-backend",
+    "version": "1.0.0",
+    "description": "Backend API for Amal Tiznit Football Club website",
+    "main": "server.js",
+    "scripts": {
+        "start": "node server.js",
+        "dev": "nodemon server.js",
+        "db:init": "node ../amal-db/init.js",
+        "db:migrate": "node ../amal-db/migrate.js",
+        "seed": "node ../amal-db/init.js"
+    },
+    "dependencies": {
+        "bcryptjs": "^3.0.3",
+        "cors": "^2.8.5",
+        "dotenv": "^16.3.1",
+        "express": "^4.18.2",
+        "jsonwebtoken": "^9.0.3",
+        "mysql2": "^3.6.5"
+    },
+    "devDependencies": {
+        "nodemon": "^3.0.2"
+    }
+}
