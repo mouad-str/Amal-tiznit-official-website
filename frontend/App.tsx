@@ -1,6 +1,6 @@
 
 import React from 'react';
-import { HashRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home';
@@ -28,6 +28,8 @@ import Login from './pages/Login';
 import { AuthProvider } from './contexts/AuthContext';
 import ProtectedRoute from './components/ProtectedRoute';
 
+import DesignSystemShowcase from './pages/DesignSystemShowcase';
+
 const MainLayout: React.FC<{ children: React.ReactNode }> = ({ children }) => (
   <div className="flex flex-col min-h-screen">
     <Navbar />
@@ -46,6 +48,7 @@ const App: React.FC = () => {
           <Routes>
             {/* Public Routes */}
             <Route path="/" element={<MainLayout><Home /></MainLayout>} />
+            <Route path="/design-system" element={<DesignSystemShowcase />} />
             <Route path="/players" element={<MainLayout><Players /></MainLayout>} />
             <Route path="/matches" element={<MainLayout><Matches /></MainLayout>} />
             <Route path="/news" element={<MainLayout><News /></MainLayout>} />
