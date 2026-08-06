@@ -97,10 +97,32 @@ const deleteProduct = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'Product not found' });
         }
-        res.json({ message: 'Product deleted successfully' });
+// GET coupons
+const getCoupons = async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM coupons ORDER BY id DESC');
+        res.json(rows);
     } catch (error) {
-        console.error('Error deleting product:', error);
-        res.status(500).json({ error: 'Failed to delete product' });
+        console.error('Error fetching coupons:', error);
+        res.status(500).json({ error: 'Failed to fetch coupons' });
+    }
+};
+
+// POST create coupon
+const createCoupon = async (req, res) => {
+    try {
+        const { code, discount_percent } = req.body;
+        if (!code || !discount_percent) {
+            return res.status(400).json({ error: 'Code and discount percentage required' });
+        }
+        const [result] = await pool.query(
+            'INSERT INTO coupons (code, discount_percent, active) VALUES (?, ?, TRUE)',
+            [code.trim().toUpperCase(), discount_percent]
+        );
+        res.status(201).json({ id: result.insertId, message: 'Coupon created' });
+    } catch (error) {
+        console.error('Error creating coupon:', error);
+        res.status(500).json({ error: 'Failed to create coupon' });
     }
 };
 
@@ -109,5 +131,7 @@ module.exports = {
     getProductById,
     createProduct,
     updateProduct,
-    deleteProduct
+    deleteProduct,
+    getCoupons,
+    createCoupon
 };
