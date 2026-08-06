@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API, Player } from '../../api';
-import { Upload, X, Check, Image as ImageIcon, AlertCircle, Trash2, Edit2, Plus, Search } from 'lucide-react';
+import { Upload, X, Check, Image as ImageIcon, AlertCircle, Trash2, Edit2, Plus, Search, Trophy, Shield, Activity } from 'lucide-react';
 
 const PRESET_IMAGES = [
   '/Assets/bg.jpg',
@@ -21,6 +21,7 @@ const ManagePlayers: React.FC = () => {
     name: '',
     position: 'Midfielder' as 'Goalkeeper' | 'Defender' | 'Midfielder' | 'Forward',
     number: 1,
+    team_category: 'Senior' as 'Senior' | 'U21' | 'Women',
     image_url: '',
     nationality: 'Moroccan',
     matches_played: 0,
@@ -89,6 +90,7 @@ const ManagePlayers: React.FC = () => {
   const filteredPlayers = players.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (p.team_category || 'Senior').toLowerCase().includes(searchTerm.toLowerCase()) ||
     String(p.number).includes(searchTerm)
   );
 
@@ -107,9 +109,12 @@ const ManagePlayers: React.FC = () => {
       const payload = {
         ...formData,
         number: Number(formData.number) || 1,
+        matches_played: Number(formData.matches_played) || 0,
         goals: Number(formData.goals) || 0,
         assists: Number(formData.assists) || 0,
-        matches_played: Number(formData.matches_played) || 0,
+        minutes_played: Number(formData.minutes_played) || 0,
+        yellow_cards: Number(formData.yellow_cards) || 0,
+        red_cards: Number(formData.red_cards) || 0,
         image_url: formData.image_url || '/Assets/bg2.jpg'
       };
 
@@ -150,6 +155,7 @@ const ManagePlayers: React.FC = () => {
       name: player.name || '',
       position: player.position || 'Midfielder',
       number: player.number || 1,
+      team_category: (player as any).team_category || 'Senior',
       image_url: player.image_url || '',
       nationality: player.nationality || 'Moroccan',
       matches_played: player.matches_played || 0,
@@ -165,7 +171,7 @@ const ManagePlayers: React.FC = () => {
 
   const resetForm = () => {
     setFormData({
-      name: '', position: 'Midfielder', number: 1, image_url: '', nationality: 'Moroccan',
+      name: '', position: 'Midfielder', number: 1, team_category: 'Senior', image_url: '', nationality: 'Moroccan',
       matches_played: 0, goals: 0, assists: 0, minutes_played: 0, yellow_cards: 0, red_cards: 0
     });
     setErrorMsg(null);
@@ -185,8 +191,8 @@ const ManagePlayers: React.FC = () => {
       {/* Header Banner */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
         <div>
-          <h2 className="text-xl font-black uppercase text-[#001226] font-display">Gestion de l'Effectif</h2>
-          <p className="text-xs text-gray-500">Ajoutez, modifiez et téléchargez les photos des joueurs d'Amal Tiznit.</p>
+          <h2 className="text-xl font-black uppercase text-[#001226] font-display">Gestion Complète de l'Effectif</h2>
+          <p className="text-xs text-gray-500">Gérez le profil complet, la catégorie d'équipe et l'ensemble des statistiques de chaque joueur.</p>
         </div>
         <button 
           onClick={() => { resetForm(); setShowForm(true); }} 
@@ -199,13 +205,16 @@ const ManagePlayers: React.FC = () => {
       {/* Form Modal */}
       {showForm && (
         <div className="fixed inset-0 bg-slate-950/70 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-          <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-2xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
+          <div className="bg-white rounded-2xl p-6 sm:p-8 w-full max-w-3xl max-h-[90vh] overflow-y-auto shadow-2xl relative">
             
             <div className="flex justify-between items-center pb-4 border-b border-gray-100 mb-6">
-              <h3 className="text-lg font-black uppercase text-[#001226] font-display">
-                {editingPlayer ? `Modifier ${editingPlayer.name}` : 'Ajouter Un Joueur'}
-              </h3>
-              <button onClick={() => { setShowForm(false); setEditingPlayer(null); resetForm(); }} className="text-gray-400 hover:text-gray-600">
+              <div>
+                <h3 className="text-lg font-black uppercase text-[#001226] font-display">
+                  {editingPlayer ? `Modifier Profil & Stats de ${editingPlayer.name}` : 'Créer Un Nouveau Joueur'}
+                </h3>
+                <span className="text-[10px] text-gray-400 font-medium">Édition des informations générales, équipe et statistiques individuelles</span>
+              </div>
+              <button onClick={() => { setShowForm(false); setEditingPlayer(null); resetForm(); }} className="text-gray-400 hover:text-gray-600 p-1">
                 <X size={20} />
               </button>
             </div>
@@ -216,142 +225,212 @@ const ManagePlayers: React.FC = () => {
               </div>
             )}
 
-            <form onSubmit={handleSubmit} className="space-y-5">
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Nom Du Joueur</label>
-                  <input 
-                    type="text" 
-                    value={formData.name} 
-                    onChange={e => setFormData({ ...formData, name: e.target.value })}
-                    placeholder="ex: Sofiane Rahimi"
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none" 
-                    required 
-                  />
-                </div>
+            <form onSubmit={handleSubmit} className="space-y-6">
+              
+              {/* SECTION 1: PROFIL & IDENTITÉ */}
+              <div className="space-y-4">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg inline-block">
+                  1. Identité & Catégorie d'Équipe
+                </h4>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Poste</label>
-                  <select 
-                    value={formData.position} 
-                    onChange={e => setFormData({ ...formData, position: e.target.value as any })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none"
-                  >
-                    <option value="Goalkeeper">Gardien (Goalkeeper)</option>
-                    <option value="Defender">Défenseur (Defender)</option>
-                    <option value="Midfielder">Milieu (Midfielder)</option>
-                    <option value="Forward">Attaquant (Forward)</option>
-                  </select>
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Numéro Maillot</label>
-                  <input 
-                    type="number" 
-                    value={formData.number} 
-                    onChange={e => setFormData({ ...formData, number: parseInt(e.target.value) || 1 })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none" 
-                    required 
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Nationalité</label>
-                  <input 
-                    type="text" 
-                    value={formData.nationality} 
-                    onChange={e => setFormData({ ...formData, nationality: e.target.value })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none" 
-                  />
-                </div>
-
-                {/* Photo Upload Section */}
-                <div className="sm:col-span-2 space-y-3 pt-2">
-                  <label className="block text-xs font-bold text-gray-700 uppercase">Photo Officielle</label>
-                  
-                  {/* Image Preview */}
-                  <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
-                    <div className="w-16 h-16 bg-white rounded-lg border overflow-hidden flex-shrink-0">
-                      <img
-                        src={formData.image_url || '/Assets/bg2.jpg'}
-                        alt="Preview"
-                        className="w-full h-full object-cover"
-                        onError={(e) => { (e.target as HTMLImageElement).src = '/Assets/bg2.jpg'; }}
-                      />
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <span className="text-xs font-bold text-gray-800 block truncate">
-                        {formData.image_url?.startsWith('data:') ? '📷 Photo Téléchargée de l\'appareil' : (formData.image_url || 'Photo par défaut')}
-                      </span>
-                      <span className="text-[10px] text-gray-400">Format accepté: JPG, PNG, WEBP</span>
-                    </div>
-
-                    {formData.image_url && (
-                      <button
-                        type="button"
-                        onClick={() => setFormData({ ...formData, image_url: '' })}
-                        className="text-red-500 hover:text-red-700 text-xs font-bold"
-                      >
-                        Supprimer
-                      </button>
-                    )}
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Nom Du Joueur</label>
+                    <input 
+                      type="text" 
+                      value={formData.name} 
+                      onChange={e => setFormData({ ...formData, name: e.target.value })}
+                      placeholder="ex: Sofiane Rahimi"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-blue-600 outline-none" 
+                      required 
+                    />
                   </div>
 
-                  {/* Upload Controls */}
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    <label className="cursor-pointer border-2 border-dashed border-blue-200 hover:border-blue-500 bg-blue-50/50 hover:bg-blue-50 p-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
-                      <Upload size={16} className="text-blue-600" />
-                      <span className="text-xs font-bold text-blue-700 uppercase">Choisir une Image...</span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        className="hidden"
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          if (file) handleImageFileUpload(file);
-                        }}
-                      />
-                    </label>
-
-                    {/* Presets */}
-                    <div className="flex items-center justify-around bg-gray-50 border p-1 rounded-xl">
-                      <span className="text-[10px] font-bold text-gray-400 uppercase">Presets:</span>
-                      {PRESET_IMAGES.map((img, i) => (
-                        <button
-                          key={i}
-                          type="button"
-                          onClick={() => setFormData({ ...formData, image_url: img })}
-                          className={`w-8 h-8 rounded-lg overflow-hidden border-2 ${formData.image_url === img ? 'border-blue-600 scale-110' : 'border-transparent'}`}
-                        >
-                          <img src={img} alt="" className="w-full h-full object-cover" />
-                        </button>
-                      ))}
-                    </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Catégorie Équipe</label>
+                    <select 
+                      value={formData.team_category} 
+                      onChange={e => setFormData({ ...formData, team_category: e.target.value as any })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-blue-600 outline-none font-bold"
+                    >
+                      <option value="Senior">Équipe Première (Séniors)</option>
+                      <option value="U21">Académie U-21 (Espoirs)</option>
+                      <option value="Women">Équipe Féminine (Dames)</option>
+                    </select>
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Buts</label>
-                  <input 
-                    type="number" 
-                    value={formData.goals} 
-                    onChange={e => setFormData({ ...formData, goals: parseInt(e.target.value) || 0 })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none" 
-                  />
-                </div>
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Poste Sur Le Terrain</label>
+                    <select 
+                      value={formData.position} 
+                      onChange={e => setFormData({ ...formData, position: e.target.value as any })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-blue-600 outline-none"
+                    >
+                      <option value="Goalkeeper">Gardien (Goalkeeper)</option>
+                      <option value="Defender">Défenseur (Defender)</option>
+                      <option value="Midfielder">Milieu (Midfielder)</option>
+                      <option value="Forward">Attaquant (Forward)</option>
+                    </select>
+                  </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Passes Décisives</label>
-                  <input 
-                    type="number" 
-                    value={formData.assists} 
-                    onChange={e => setFormData({ ...formData, assists: parseInt(e.target.value) || 0 })}
-                    className="w-full border border-gray-200 rounded-xl px-4 py-2.5 text-sm focus:ring-2 focus:ring-blue-600 outline-none" 
-                  />
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Numéro De Maillot</label>
+                    <input 
+                      type="number" 
+                      value={formData.number} 
+                      onChange={e => setFormData({ ...formData, number: parseInt(e.target.value) || 1 })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-blue-600 outline-none font-mono font-bold" 
+                      required 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Nationalité</label>
+                    <input 
+                      type="text" 
+                      value={formData.nationality} 
+                      onChange={e => setFormData({ ...formData, nationality: e.target.value })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-blue-600 outline-none" 
+                    />
+                  </div>
                 </div>
               </div>
 
+              {/* SECTION 2: PHOTO UPLOAD */}
+              <div className="space-y-3 pt-2 border-t border-gray-100">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg inline-block">
+                  2. Photo Officielle du Joueur
+                </h4>
+
+                <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
+                  <div className="w-16 h-16 bg-white rounded-lg border overflow-hidden flex-shrink-0">
+                    <img
+                      src={formData.image_url || '/Assets/bg2.jpg'}
+                      alt="Preview"
+                      className="w-full h-full object-cover"
+                      onError={(e) => { (e.target as HTMLImageElement).src = '/Assets/bg2.jpg'; }}
+                    />
+                  </div>
+                  
+                  <div className="flex-1 min-w-0">
+                    <span className="text-xs font-bold text-gray-800 block truncate">
+                      {formData.image_url?.startsWith('data:') ? '📷 Image locale téléchargée' : (formData.image_url || 'Image par défaut')}
+                    </span>
+                    <span className="text-[10px] text-gray-400">Compression automatique HTML5 (Max 600px)</span>
+                  </div>
+
+                  {formData.image_url && (
+                    <button
+                      type="button"
+                      onClick={() => setFormData({ ...formData, image_url: '' })}
+                      className="text-red-500 hover:text-red-700 text-xs font-bold"
+                    >
+                      Effacer
+                    </button>
+                  )}
+                </div>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <label className="cursor-pointer border-2 border-dashed border-blue-200 hover:border-blue-500 bg-blue-50/50 hover:bg-blue-50 p-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
+                    <Upload size={16} className="text-blue-600" />
+                    <span className="text-xs font-bold text-blue-700 uppercase">Télécharger Photo...</span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) handleImageFileUpload(file);
+                      }}
+                    />
+                  </label>
+
+                  <div className="flex items-center justify-around bg-gray-50 border p-1 rounded-xl">
+                    <span className="text-[10px] font-bold text-gray-400 uppercase">Presets:</span>
+                    {PRESET_IMAGES.map((img, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setFormData({ ...formData, image_url: img })}
+                        className={`w-8 h-8 rounded-lg overflow-hidden border-2 ${formData.image_url === img ? 'border-blue-600 scale-110' : 'border-transparent'}`}
+                      >
+                        <img src={img} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3: STATISTIQUES DE SAISON */}
+              <div className="space-y-4 pt-2 border-t border-gray-100">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg inline-block">
+                  3. Statistiques Individuelles de Saison
+                </h4>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Matchs Joués</label>
+                    <input 
+                      type="number" 
+                      value={formData.matches_played} 
+                      onChange={e => setFormData({ ...formData, matches_played: parseInt(e.target.value) || 0 })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs font-mono font-bold focus:ring-2 focus:ring-blue-600 outline-none" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Buts Marqués</label>
+                    <input 
+                      type="number" 
+                      value={formData.goals} 
+                      onChange={e => setFormData({ ...formData, goals: parseInt(e.target.value) || 0 })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs font-mono font-bold text-emerald-600 focus:ring-2 focus:ring-blue-600 outline-none" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Passes Décisives</label>
+                    <input 
+                      type="number" 
+                      value={formData.assists} 
+                      onChange={e => setFormData({ ...formData, assists: parseInt(e.target.value) || 0 })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs font-mono font-bold text-blue-600 focus:ring-2 focus:ring-blue-600 outline-none" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Minutes Jouées</label>
+                    <input 
+                      type="number" 
+                      value={formData.minutes_played} 
+                      onChange={e => setFormData({ ...formData, minutes_played: parseInt(e.target.value) || 0 })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs font-mono focus:ring-2 focus:ring-blue-600 outline-none" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Cartons Jaunes 🟨</label>
+                    <input 
+                      type="number" 
+                      value={formData.yellow_cards} 
+                      onChange={e => setFormData({ ...formData, yellow_cards: parseInt(e.target.value) || 0 })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs font-mono text-amber-600 font-bold focus:ring-2 focus:ring-blue-600 outline-none" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Cartons Rouges 🟥</label>
+                    <input 
+                      type="number" 
+                      value={formData.red_cards} 
+                      onChange={e => setFormData({ ...formData, red_cards: parseInt(e.target.value) || 0 })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs font-mono text-red-600 font-bold focus:ring-2 focus:ring-blue-600 outline-none" 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions Footer */}
               <div className="flex justify-end gap-3 pt-4 border-t border-gray-100">
                 <button 
                   type="button" 
@@ -370,7 +449,7 @@ const ManagePlayers: React.FC = () => {
                   ) : (
                     <Check size={16} />
                   )}
-                  {editingPlayer ? 'Mettre À Jour' : 'Créer Joueur'}
+                  {editingPlayer ? 'Enregistrer Modifications' : 'Créer Joueur'}
                 </button>
               </div>
             </form>
@@ -380,16 +459,20 @@ const ManagePlayers: React.FC = () => {
 
       {/* Main Table Content */}
       <div className="bg-white rounded-2xl shadow-sm border border-gray-100 overflow-hidden">
-        <div className="p-4 sm:p-6 border-b border-gray-100 flex justify-between items-center">
-          <div className="relative w-72">
+        <div className="p-4 sm:p-6 border-b border-gray-100 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+          <div className="relative w-full sm:w-72">
             <Search className="absolute left-3 top-3 text-gray-400" size={16} />
             <input 
               type="text" 
-              placeholder="Rechercher un joueur..." 
+              placeholder="Rechercher par nom, poste ou catégorie..." 
               value={searchTerm} 
               onChange={e => setSearchTerm(e.target.value)}
               className="w-full bg-gray-50 border border-gray-200 rounded-xl pl-9 pr-4 py-2 text-xs focus:ring-2 focus:ring-blue-600 outline-none" 
             />
+          </div>
+
+          <div className="text-xs font-bold text-gray-500 font-mono">
+            Total Joueurs: <span className="text-blue-600 font-black">{players.length}</span>
           </div>
         </div>
 
@@ -398,10 +481,11 @@ const ManagePlayers: React.FC = () => {
             <thead className="bg-gray-50 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
               <tr>
                 <th className="px-6 py-3.5">Joueur</th>
+                <th className="px-6 py-3.5">Catégorie</th>
                 <th className="px-6 py-3.5">Poste</th>
                 <th className="px-6 py-3.5">Numéro</th>
-                <th className="px-6 py-3.5">Statistiques</th>
-                <th className="px-6 py-3.5 text-right">Actions</th>
+                <th className="px-6 py-3.5">Statistiques Clés</th>
+                <th className="px-6 py-3.5 text-right">Actions Admin</th>
               </tr>
             </thead>
             <tbody className="divide-y divide-gray-100 text-xs">
@@ -423,16 +507,24 @@ const ManagePlayers: React.FC = () => {
                       </div>
                     </div>
                   </td>
+                  <td className="px-6 py-4">
+                    <span className={`text-[9px] font-bold uppercase px-2.5 py-1 rounded-full ${
+                      (player as any).team_category === 'U21' ? 'bg-amber-100 text-amber-800' :
+                      (player as any).team_category === 'Women' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                    }`}>
+                      {(player as any).team_category || 'Senior'}
+                    </span>
+                  </td>
                   <td className="px-6 py-4 font-medium text-gray-700">{player.position}</td>
                   <td className="px-6 py-4 font-black font-mono text-[#001226]">#{player.number}</td>
                   <td className="px-6 py-4 font-mono text-gray-600">
-                    <span className="font-bold text-blue-700">{player.goals}G</span> / <span className="font-bold text-emerald-700">{player.assists}A</span>
+                    <span className="font-bold text-blue-700">{player.goals || 0}G</span> / <span className="font-bold text-emerald-700">{player.assists || 0}A</span> • <span className="text-gray-400">{player.matches_played || 0} MJ</span>
                   </td>
                   <td className="px-6 py-4 text-right space-x-2">
                     <button 
                       onClick={() => handleEdit(player)} 
                       className="p-2 text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
-                      title="Modifier"
+                      title="Modifier Profil & Stats"
                     >
                       <Edit2 size={16} />
                     </button>
