@@ -365,11 +365,11 @@ const Shop: React.FC = () => {
     }
 
     return (
-        <div className="min-h-screen bg-transparent pt-20 pb-24 text-white overflow-x-hidden">
+        <div className="min-h-screen bg-transparent pt-20 pb-24 mt-12 text-white overflow-x-hidden">
             
             {/* ── Toast Notification Banner ───── */}
             {toastMessage && (
-                <div className="fixed top-24 right-6 z-50 bg-[#002D62] text-white border border-[#D4AF37]/50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-up">
+                <div className="fixed top-24 right-6 z-50 bg-[#002D62] text-white border border-[#D4AF37]/50 px-5 py-3  rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-up ">
                     <CheckCircle2 className="w-5 h-5 text-[#D4AF37]" />
                     <span className="text-xs font-bold uppercase tracking-wider">{toastMessage}</span>
                 </div>

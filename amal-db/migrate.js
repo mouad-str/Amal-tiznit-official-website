@@ -54,6 +54,39 @@ async function migrate() {
         await runSafe('[M003] products.sizes',
             "ALTER TABLE products ADD COLUMN sizes VARCHAR(255) DEFAULT 'S,M,L,XL' AFTER stock");
 
+        // M004 — E-Commerce Shop Enhancements for products
+        await runSafe('[M004] products.slug',
+            'ALTER TABLE products ADD COLUMN slug VARCHAR(255) DEFAULT NULL AFTER name');
+        await runSafe('[M004] products.collection',
+            "ALTER TABLE products ADD COLUMN collection VARCHAR(100) DEFAULT 'Main' AFTER category");
+        await runSafe('[M004] products.gender',
+            "ALTER TABLE products ADD COLUMN gender VARCHAR(50) DEFAULT 'Unisex' AFTER collection");
+        await runSafe('[M004] products.compare_at_price',
+            'ALTER TABLE products ADD COLUMN compare_at_price DECIMAL(10,2) DEFAULT NULL AFTER price');
+        await runSafe('[M004] products.is_featured',
+            'ALTER TABLE products ADD COLUMN is_featured BOOLEAN DEFAULT FALSE AFTER compare_at_price');
+        await runSafe('[M004] products.is_new',
+            'ALTER TABLE products ADD COLUMN is_new BOOLEAN DEFAULT FALSE AFTER is_featured');
+
+        // M005 — E-Commerce Order Items Enhancements
+        await runSafe('[M005] order_items.size',
+            "ALTER TABLE order_items ADD COLUMN size VARCHAR(50) DEFAULT 'M' AFTER quantity");
+        await runSafe('[M005] order_items.flocage',
+            'ALTER TABLE order_items ADD COLUMN flocage VARCHAR(255) DEFAULT NULL AFTER size');
+        await runSafe('[M005] order_items.has_patch',
+            'ALTER TABLE order_items ADD COLUMN has_patch BOOLEAN DEFAULT FALSE AFTER flocage');
+
+        // M006 — Create Coupons Table
+        await runSafe('[M006] coupons table', `
+            CREATE TABLE IF NOT EXISTS coupons (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                code VARCHAR(50) NOT NULL UNIQUE,
+                discount_percent INT NOT NULL,
+                active BOOLEAN DEFAULT TRUE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
         console.log('\n🎉 All migrations completed successfully!');
     } catch (error) {
         console.error('❌ Migration failed:', error.message);

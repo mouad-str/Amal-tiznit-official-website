@@ -78,7 +78,13 @@ export const API = {
             customer_email: string;
             customer_phone: string;
             customer_address: string;
-            items: { product_id: number; quantity: number }[]
+            items: { 
+                product_id: number; 
+                quantity: number;
+                size?: string;
+                flocage?: string | null;
+                has_patch?: boolean;
+            }[]
         }) => apiFetch<{ success: boolean; orderId: number; total: number }>('/orders', { method: 'POST', body: JSON.stringify(data) }),
         getAll: () => apiFetch<any[]>('/orders', { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }),
         updateStatus: (id: number, status: string) => apiFetch<void>(`/orders/${id}/status`, {
@@ -128,12 +134,18 @@ export interface NewsArticle {
 export interface Product {
     id: number;
     name: string;
+    slug?: string;
     description: string;
     price: number;
+    compare_at_price?: number | null;
     image_url: string;
     category: string;
+    collection?: string;
+    gender?: string;
     stock: number;
     sizes: string;
+    is_featured?: boolean;
+    is_new?: boolean;
 }
 
 export interface Ticket {

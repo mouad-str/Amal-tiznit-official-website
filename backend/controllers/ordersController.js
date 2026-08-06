@@ -32,13 +32,24 @@ const createOrder = async (req, res) => {
                 throw new Error(`Insufficient stock for product ID ${item.product_id}`);
             }
 
-            totalAmount += product.price * item.quantity;
-            processedItems.push({ ...item, price: product.price });
+            let itemPrice = Number(product.price);
+            if (item.flocage) itemPrice += 40;
+            if (item.has_patch) itemPrice += 25;
+
+            totalAmount += itemPrice * item.quantity;
+            processedItems.push({
+                product_id: item.product_id,
+                quantity: item.quantity,
+                price: itemPrice,
+                size: item.size || 'M',
+                flocage: item.flocage || null,
+                has_patch: item.has_patch ? 1 : 0
+            });
         }
 
         // 2. Create Order
         const [orderResult] = await connection.query(
-            `INSERT INTO orders (customer_name, customer_email, customer_phone, customer_address, total_amount, status)
+            `INSERT INTO orders (customer_name, customer_email, customer_phone, customer_address, total, status)
              VALUES (?, ?, ?, ?, ?, 'pending')`,
             [customer_name, customer_email, customer_phone, customer_address, totalAmount]
         );
@@ -47,9 +58,9 @@ const createOrder = async (req, res) => {
         // 3. Create Order Items & Update Stock
         for (const item of processedItems) {
             await connection.query(
-                `INSERT INTO order_items (order_id, product_id, quantity, price_at_time)
-                 VALUES (?, ?, ?, ?)`,
-                [orderId, item.product_id, item.quantity, item.price]
+                `INSERT INTO order_items (order_id, product_id, quantity, price, size, flocage, has_patch)
+                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
+                [orderId, item.product_id, item.quantity, item.price, item.size, item.flocage, item.has_patch]
             );
 
             await connection.query(

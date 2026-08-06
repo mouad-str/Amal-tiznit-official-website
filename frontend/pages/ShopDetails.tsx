@@ -291,7 +291,7 @@ const ShopDetails: React.FC = () => {
             )}
 
             {/* ── Breadcrumb Navigation ───────── */}
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-8">
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-8 mt-12">
                 <div className="flex items-center gap-2 text-xs text-gray-400 font-display uppercase tracking-wider">
                     <Link to="/" className="hover:text-white transition-colors">Accueil</Link>
                     <ChevronRight size={12} />
