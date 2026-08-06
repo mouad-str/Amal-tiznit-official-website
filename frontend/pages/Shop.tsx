@@ -23,7 +23,12 @@ import {
     Eye,
     ArrowRight,
     Check,
-    HelpCircle
+    HelpCircle,
+    SlidersHorizontal,
+    Star,
+    Zap,
+    RotateCcw,
+    Lock
 } from 'lucide-react';
 import { API, Product } from '../api';
 import { ASSETS } from '../constants';
@@ -45,17 +50,18 @@ interface CartItem {
     stock: number;
 }
 
-type SortOption = 'default' | 'price-asc' | 'price-desc';
+type SortOption = 'default' | 'price-asc' | 'price-desc' | 'popular' | 'newest';
+type GenderFilter = 'All' | 'Homme' | 'Femme' | 'Enfant';
 
 const SQUAD_STAR_PLAYERS = [
-    { name: 'CHAHBOUN', number: '10' },
-    { name: 'EL AMRAOUI', number: '7' },
-    { name: 'BAHBAH', number: '9' },
-    { name: 'BENALI', number: '8' },
-    { name: 'TOURI', number: '1' }
+    { id: 1, name: 'CHAHBOUN', number: '10', pos: 'Milieu offensif', avatar: '/Assets/bg2.jpg' },
+    { id: 2, name: 'EL AMRAOUI', number: '7', pos: 'Attaquant', avatar: '/Assets/bg2.jpg' },
+    { id: 3, name: 'BAHBAH', number: '9', pos: 'Avant-centre', avatar: '/Assets/bg2.jpg' },
+    { id: 4, name: 'BENALI', number: '8', pos: 'Milieu', avatar: '/Assets/bg2.jpg' },
+    { id: 5, name: 'TOURI', number: '1', pos: 'Gardien', avatar: '/Assets/bg2.jpg' }
 ];
 
-/* ── Cart & Wishlist persistence helpers ────── */
+/* ── Persistence Helpers ───────────────────── */
 
 const CART_KEY = 'usat_shop_cart';
 const WISHLIST_KEY = 'usat_shop_wishlist';
@@ -72,8 +78,8 @@ const saveWishlist = (list: number[]) => localStorage.setItem(WISHLIST_KEY, JSON
 
 /* ── Constants ─────────────────────────────── */
 
-const ITEMS_PER_PAGE = 9;
-const FREE_SHIPPING_THRESHOLD = 400; // DH
+const ITEMS_PER_PAGE = 12;
+const FREE_SHIPPING_THRESHOLD = 500; // DH
 const PHONE_REGEX = /^(\+212|0)[5-7]\d{8}$/;
 
 /* ── Component ─────────────────────────────── */
@@ -86,7 +92,7 @@ const Shop: React.FC = () => {
     const [cart, setCart] = useState<CartItem[]>(loadCart);
     const [isCartOpen, setIsCartOpen] = useState(false);
     const [promoCode, setPromoCode] = useState('');
-    const [appliedDiscount, setAppliedDiscount] = useState(0); // percentage 0.10 = 10%
+    const [appliedDiscount, setAppliedDiscount] = useState(0); // 0.10 = 10%
     const [discountError, setDiscountError] = useState('');
 
     // Wishlist State
@@ -95,16 +101,18 @@ const Shop: React.FC = () => {
     // Toast Notification
     const [toastMessage, setToastMessage] = useState<string | null>(null);
 
-    // Filters
+    // Filter States (Real Madrid Store Style)
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [selectedGender, setSelectedGender] = useState<GenderFilter>('All');
     const [searchTerm, setSearchTerm] = useState('');
     const [sortBy, setSortBy] = useState<SortOption>('default');
-    const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
+    const [priceRange, setPriceRange] = useState<[number, number]>([0, 1500]);
+    const [onlyInStock, setOnlyInStock] = useState(false);
 
     // Pagination
     const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
 
-    // Product Detail Modal & Customization
+    // Product Detail Modal & Customization (Real Madrid Kit Configurator)
     const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
     const [selectedSize, setSelectedSize] = useState('');
     const [flocageOption, setFlocageOption] = useState<'none' | 'player' | 'custom'>('none');
@@ -112,7 +120,7 @@ const Shop: React.FC = () => {
     const [customName, setCustomName] = useState('');
     const [customNumber, setCustomNumber] = useState('');
     const [addPatch, setAddPatch] = useState(false);
-    const [activeImageIndex, setActiveImageIndex] = useState(0);
+    const [activeTab, setActiveTab] = useState<'front' | 'back'>('front');
 
     // Checkout Form
     const [checkoutStep, setCheckoutStep] = useState<'cart' | 'details' | 'success'>('cart');
@@ -121,22 +129,22 @@ const Shop: React.FC = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderResult, setOrderResult] = useState<{ orderId: number; total: number } | null>(null);
 
-    /* ── Data Fetching ───────────────────────── */
+    /* ── Fetch Products ─────────────────────── */
 
     useEffect(() => {
-        document.title = "Boutique Officielle | US Amal Tiznit (USAT)";
+        document.title = "Boutique Officielle Real Style | US Amal Tiznit";
         API.shop.getAll()
-            .then(setProducts)
+            .then(data => setProducts(data))
             .catch(() => console.error('Failed to fetch shop products'))
             .finally(() => setLoading(false));
     }, []);
 
-    /* ── Persistence ─────────────────────────── */
+    /* ── Persistence Sync ───────────────────── */
 
     useEffect(() => { saveCart(cart); }, [cart]);
     useEffect(() => { saveWishlist(wishlist); }, [wishlist]);
 
-    /* ── Scroll Lock Management ─────────────── */
+    /* ── Body Overflow Lock Cleanup ─────────── */
 
     useEffect(() => {
         if (isCartOpen || selectedProduct) {
@@ -167,7 +175,7 @@ const Shop: React.FC = () => {
         });
     };
 
-    /* ── Cart Actions ───────────────────────── */
+    /* ── Add To Cart Handler ────────────────── */
 
     const addToCart = useCallback((
         product: Product, 
@@ -179,8 +187,8 @@ const Shop: React.FC = () => {
         if (product.stock <= 0) return;
 
         let extraPrice = 0;
-        if (flocageName || flocageNumber) extraPrice += 30; // 30 DH Flocage
-        if (hasPatch) extraPrice += 20; // 20 DH Patch
+        if (flocageName || flocageNumber) extraPrice += 40; // 40 DH Official Flocage
+        if (hasPatch) extraPrice += 25; // 25 DH Patch Botola Pro
 
         setCart(prev => {
             const key = `${product.id}-${size}-${flocageName || ''}-${flocageNumber || ''}-${hasPatch ? 'P' : 'N'}`;
@@ -227,7 +235,7 @@ const Shop: React.FC = () => {
         }));
     };
 
-    // Calculation Totals
+    // Calculate Totals
     const subtotal = cart.reduce((sum, item) => sum + item.price * item.quantity, 0);
     const discountAmount = Math.round(subtotal * appliedDiscount);
     const cartTotal = subtotal - discountAmount;
@@ -240,16 +248,16 @@ const Shop: React.FC = () => {
     const handleApplyPromo = (e: React.FormEvent) => {
         e.preventDefault();
         const code = promoCode.trim().toUpperCase();
-        if (code === 'AMAL10' || code === 'USAT2026' || code === 'SUPPORTER') {
+        if (code === 'HALAAMAL' || code === 'AMAL10' || code === 'USAT2026') {
             setAppliedDiscount(0.10); // 10%
             setDiscountError('');
-            showToast('Code Promo appliqué : 10% de réduction! 🎉');
+            showToast('Code Promo Valide : 10% de réduction appliquée! 🎉');
         } else {
-            setDiscountError('Code promo invalide (Essayer: AMAL10)');
+            setDiscountError('Code invalide (Essayer: AMAL10)');
         }
     };
 
-    /* ── Checkout Process ──────────────────── */
+    /* ── Checkout Submit ───────────────────── */
 
     const validateForm = () => {
         const errors: Record<string, string> = {};
@@ -259,7 +267,7 @@ const Shop: React.FC = () => {
         if (!checkoutForm.phone.trim()) errors.phone = 'Numéro de téléphone requis';
         else if (!PHONE_REGEX.test(checkoutForm.phone.replace(/\s/g, ''))) errors.phone = 'Format: +212XXXXXXXXX ou 06XXXXXXXX';
         if (!checkoutForm.address.trim()) errors.address = 'Adresse de livraison requise';
-        else if (checkoutForm.address.trim().length < 10) errors.address = 'Veuillez saisir une adresse complète avec ville';
+        else if (checkoutForm.address.trim().length < 10) errors.address = 'Veuillez saisir votre adresse complète avec ville';
         setFormErrors(errors);
         return Object.keys(errors).length === 0;
     };
@@ -287,19 +295,24 @@ const Shop: React.FC = () => {
             setCheckoutStep('success');
             setCart([]);
         } catch (error: any) {
-            alert(error?.message || 'Erreur lors de la confirmation de votre commande. Veuillez réessayer.');
+            alert(error?.message || 'Erreur lors de la confirmation de votre commande.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    /* ── Filtering & Sorting Logic ──────────── */
+    /* ── Filter & Sort Logic ────────────────── */
 
-    const categories = useMemo(() => ['All', ...new Set(products.map(p => p.category))], [products]);
+    const categories = useMemo(() => ['All', 'Maillots', 'Entraînement', 'Accessoires', 'Goodies'], []);
 
     const filteredProducts = useMemo(() => {
         let result = products.filter(p => {
-            if (selectedCategory !== 'All' && p.category !== selectedCategory) return false;
+            if (selectedCategory !== 'All' && !p.category.toLowerCase().includes(selectedCategory.toLowerCase())) {
+                if (selectedCategory === 'Maillots' && !p.name.toLowerCase().includes('maillot')) return false;
+                if (selectedCategory === 'Entraînement' && !p.name.toLowerCase().includes('entraîn') && !p.name.toLowerCase().includes('veste')) return false;
+                if (selectedCategory === 'Accessoires' && !p.name.toLowerCase().includes('casquette') && !p.name.toLowerCase().includes('écharpe')) return false;
+            }
+            if (onlyInStock && p.stock <= 0) return false;
             if (p.price < priceRange[0] || p.price > priceRange[1]) return false;
             if (searchTerm && !p.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
             return true;
@@ -307,8 +320,9 @@ const Shop: React.FC = () => {
 
         if (sortBy === 'price-asc') result.sort((a, b) => a.price - b.price);
         if (sortBy === 'price-desc') result.sort((a, b) => b.price - a.price);
+        if (sortBy === 'newest') result.sort((a, b) => b.id - a.id);
         return result;
-    }, [products, selectedCategory, priceRange, searchTerm, sortBy]);
+    }, [products, selectedCategory, onlyInStock, priceRange, searchTerm, sortBy]);
 
     const visibleProducts = filteredProducts.slice(0, visibleCount);
     const hasMore = visibleCount < filteredProducts.length;
@@ -328,106 +342,183 @@ const Shop: React.FC = () => {
         setCustomName('');
         setCustomNumber('');
         setAddPatch(false);
-        setActiveImageIndex(0);
+        setActiveTab('front');
+    };
+
+    const handleSelectPlayerFromShopByPlayer = (player: typeof SQUAD_STAR_PLAYERS[0]) => {
+        // Find main home jersey
+        const homeJersey = products.find(p => p.name.toLowerCase().includes('maillot') || p.name.toLowerCase().includes('domicile')) || products[0];
+        if (homeJersey) {
+            setSelectedProduct(homeJersey);
+            setSelectedSize(getDefaultSize(homeJersey));
+            setFlocageOption('player');
+            setSelectedPlayerFlocage(player);
+            setActiveTab('back');
+        }
     };
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-transparent pt-32 flex items-center justify-center">
-                <div className="flex flex-col items-center gap-4 bg-[#0B1528]/80 border border-white/10 p-8 rounded-2xl backdrop-blur-xl">
-                    <div className="w-12 h-12 border-3 border-blue-500 border-t-transparent rounded-full animate-spin" />
-                    <span className="text-gray-300 text-sm font-bold uppercase tracking-widest font-display">Chargement de la Boutique Officielle USAT…</span>
+            <div className="min-h-screen bg-[#040914] pt-32 flex items-center justify-center">
+                <div className="flex flex-col items-center gap-4 bg-[#0B1528] border border-white/10 p-8 rounded-3xl backdrop-blur-xl shadow-2xl">
+                    <div className="w-12 h-12 border-3 border-[#D4AF37] border-t-transparent rounded-full animate-spin" />
+                    <span className="text-gray-300 text-xs font-bold uppercase tracking-widest font-display">Chargement du Superstore Officiel USAT…</span>
                 </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-transparent pt-24 pb-24 text-white">
+        <div className="min-h-screen bg-transparent pt-20 pb-24 text-white overflow-x-hidden">
             
             {/* ── Toast Notification Banner ───── */}
             {toastMessage && (
-                <div className="fixed top-24 right-6 z-50 bg-[#002D62] text-white border border-[#D4AF37]/50 px-5 py-3 rounded-xl shadow-2xl flex items-center gap-3 animate-slide-up">
+                <div className="fixed top-24 right-6 z-50 bg-[#002D62] text-white border border-[#D4AF37]/50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-up">
                     <CheckCircle2 className="w-5 h-5 text-[#D4AF37]" />
                     <span className="text-xs font-bold uppercase tracking-wider">{toastMessage}</span>
                 </div>
             )}
 
-            {/* ── Hero Showcase Section ────────── */}
-            <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-12">
-                <div className="relative rounded-3xl overflow-hidden border border-white/10 shadow-2xl group">
-                    {/* Background Art */}
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#001226] via-[#001226]/80 to-transparent z-10" />
-                    <img 
-                        src="/Assets/bg.jpg" 
-                        alt="Boutique USAT Hero" 
-                        className="w-full h-[380px] sm:h-[460px] object-cover object-center brightness-75 group-hover:scale-105 transition-transform duration-1000"
-                    />
-
-                    {/* Watermark Logo */}
-                    <div className="absolute right-6 top-1/2 -translate-y-1/2 w-96 h-96 opacity-10 pointer-events-none z-10 hidden lg:block">
-                        <img src={ASSETS.logo} alt="" className="w-full h-full object-contain" />
-                    </div>
-
-                    {/* Hero Content */}
-                    <div className="absolute inset-0 z-20 p-8 sm:p-14 flex flex-col justify-center max-w-2xl">
-                        <div className="flex items-center space-x-3 mb-3">
-                            <span className="px-3 py-1 bg-amber-500/20 text-amber-300 border border-amber-500/40 rounded-lg text-xs font-bold uppercase tracking-widest font-display flex items-center gap-1.5">
-                                <Sparkles className="w-3.5 h-3.5 text-amber-400" /> Collection Officielle 2025/2026
-                            </span>
-                        </div>
-                        <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-white leading-none font-display mb-4">
-                            Portez La <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-amber-400">Fierté De Tiznit</span>
-                        </h1>
-                        <p className="text-gray-300 text-sm sm:text-base leading-relaxed mb-6">
-                            Découvrez la boutique officielle d'Ittihad Al-Riyadi Amal Tiznit. Maillots de match originaux, tenue d'entraînement pro et accessoires personnalisés avec flocage officiel Botola.
-                        </p>
-                        
-                        <div className="flex flex-wrap items-center gap-4">
-                            <button
-                                onClick={() => document.getElementById('shop-grid')?.scrollIntoView({ behavior: 'smooth' })}
-                                className="px-8 py-3.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white font-bold uppercase text-xs tracking-wider rounded-xl transition-all shadow-lg shadow-blue-600/40 flex items-center gap-2"
-                            >
-                                <Shirt size={16} /> Explorer la Collection
-                            </button>
-
-                            <div className="flex items-center gap-2 px-4 py-3 bg-white/5 border border-white/10 rounded-xl backdrop-blur-md">
-                                <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                                <span className="text-xs text-gray-300 font-semibold">100% Produits Authentiques</span>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                {/* ── Guarantees Bar ───────────── */}
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-6">
-                    {[
-                        { icon: Truck, title: "Livraison 48h", desc: "Partout au Maroc (CTM/Amana)" },
-                        { icon: Shirt, title: "Flocage Personnalisé", desc: "Nom & Numéro Officiels Joueurs" },
-                        { icon: ShieldCheck, title: "100% Produits Officiels", desc: "Directement issus du Club USAT" },
-                        { icon: Award, title: "Paiement Sécurisé", desc: "Carte bancaire ou à la livraison" },
-                    ].map((g, idx) => {
-                        const IconComponent = g.icon;
-                        return (
-                            <div key={idx} className="bg-[#0B1528]/80 border border-white/10 p-4 rounded-2xl flex items-center gap-3 backdrop-blur-md">
-                                <div className="p-2.5 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400 shrink-0">
-                                    <IconComponent size={20} />
-                                </div>
-                                <div>
-                                    <h4 className="text-xs font-bold uppercase text-white font-display">{g.title}</h4>
-                                    <p className="text-[10px] text-gray-400 mt-0.5">{g.desc}</p>
-                                </div>
-                            </div>
-                        );
-                    })}
+            {/* ── 1. Top Real Madrid Style Announcement Ticker Bar ───── */}
+            <div className="bg-gradient-to-r from-[#001938] via-[#002D62] to-[#001938] border-b border-[#D4AF37]/30 text-[11px] font-display uppercase tracking-widest py-2.5 text-center text-gray-200">
+                <div className="container mx-auto px-4 flex items-center justify-center gap-6 overflow-x-auto whitespace-nowrap">
+                    <span className="flex items-center gap-1.5 text-amber-300 font-bold">
+                        <Truck size={14} className="text-[#D4AF37]" /> LIVRAISON EN 48H PARTOUT AU MAROC
+                    </span>
+                    <span className="hidden md:inline text-gray-500">•</span>
+                    <span className="hidden md:flex items-center gap-1.5 text-gray-200">
+                        <Shirt size={14} className="text-blue-400" /> FLOCAGE OFFICIEL JOUEURS DISPONIBLE
+                    </span>
+                    <span className="hidden lg:inline text-gray-500">•</span>
+                    <span className="hidden lg:flex items-center gap-1.5 text-emerald-400">
+                        <ShieldCheck size={14} className="text-emerald-400" /> 100% PRODUITS AUTHENTIQUES US AMAL TIZNIT
+                    </span>
                 </div>
             </div>
 
-            {/* ── Main Store Container ────────── */}
-            <div id="shop-grid" className="container mx-auto px-4 sm:px-6 lg:px-8">
+            {/* ── 2. Real Madrid Department Navigation Sub-Bar ───── */}
+            <div className="sticky top-16 z-30 bg-[#0B1528]/95 backdrop-blur-xl border-b border-white/10 shadow-xl py-3">
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between gap-4">
+                    
+                    {/* Categories Nav */}
+                    <div className="flex items-center gap-1 overflow-x-auto scrollbar-none font-display uppercase text-xs tracking-wider">
+                        {categories.map(cat => {
+                            const active = selectedCategory === cat;
+                            return (
+                                <button
+                                    key={cat}
+                                    onClick={() => { setSelectedCategory(cat); setVisibleCount(ITEMS_PER_PAGE); }}
+                                    className={`px-4 py-2 rounded-xl transition-all whitespace-nowrap font-bold ${
+                                        active 
+                                            ? 'bg-[#002D62] text-white border border-[#D4AF37]/50 shadow-md shadow-blue-900/50' 
+                                            : 'text-gray-400 hover:text-white hover:bg-white/5'
+                                    }`}
+                                >
+                                    {cat === 'All' ? 'Tous Les Articles' : cat}
+                                </button>
+                            );
+                        })}
+                    </div>
+
+                    {/* Quick Cart Trigger */}
+                    <button 
+                        onClick={() => setIsCartOpen(true)}
+                        className="px-4 py-2 bg-[#002D62] hover:bg-blue-900 border border-[#D4AF37]/40 text-white rounded-xl text-xs font-bold font-display uppercase tracking-wider transition-all flex items-center gap-2 shrink-0 shadow-lg"
+                    >
+                        <ShoppingBag size={16} className="text-[#D4AF37]" />
+                        <span className="hidden sm:inline">Mon Panier</span>
+                        <span className="bg-[#D4AF37] text-slate-950 font-black px-2 py-0.5 rounded-full font-mono text-[11px]">
+                            {cartCount}
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            {/* ── 3. Real Madrid Superstore Hero Banner ───── */}
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 my-8">
+                <div className="relative rounded-3xl overflow-hidden border border-white/15 shadow-2xl group min-h-[420px] flex items-center">
+                    {/* Background */}
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#040914] via-[#040914]/85 to-transparent z-10" />
+                    <img 
+                        src="/Assets/bg.jpg" 
+                        alt="Real Madrid Style Banner USAT" 
+                        className="absolute inset-0 w-full h-full object-cover object-center brightness-75 group-hover:scale-105 transition-transform duration-1000"
+                    />
+
+                    {/* Transparent Watermark Logo */}
+                    <div className="absolute right-8 top-1/2 -translate-y-1/2 w-96 h-96 opacity-15 pointer-events-none z-10 hidden lg:block">
+                        <img src={ASSETS.logo} alt="" className="w-full h-full object-contain" />
+                    </div>
+
+                    {/* Content */}
+                    <div className="relative z-20 p-8 sm:p-14 max-w-2xl">
+                        <div className="inline-flex items-center gap-2 px-3.5 py-1.5 bg-amber-500/20 border border-amber-500/40 text-amber-300 rounded-xl text-xs font-bold font-display uppercase tracking-widest mb-4">
+                            <Sparkles size={14} className="text-[#D4AF37]" /> Boutique Officielle Botola Pro 25/26
+                        </div>
+
+                        <h1 className="text-4xl sm:text-6xl font-black uppercase tracking-tighter text-white leading-none font-display mb-4">
+                            SUPERSTORE <br />
+                            <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 via-blue-200 to-[#D4AF37]">
+                                US AMAL TIZNIT
+                            </span>
+                        </h1>
+
+                        <p className="text-gray-300 text-sm sm:text-base leading-relaxed mb-6">
+                            Découvrez la nouvelle collection de maillots officiels Domicile & Extérieur. Personnalisez votre tenue avec le nom et numéro officiel de vos joueurs préférés.
+                        </p>
+
+                        <div className="flex flex-wrap items-center gap-4">
+                            <button
+                                onClick={() => document.getElementById('shop-collection')?.scrollIntoView({ behavior: 'smooth' })}
+                                className="px-8 py-4 bg-gradient-to-r from-[#002D62] to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-black uppercase text-xs tracking-wider rounded-2xl transition-all shadow-xl shadow-blue-900/50 flex items-center gap-2 font-display border border-[#D4AF37]/40"
+                            >
+                                <Shirt size={18} className="text-[#D4AF37]" /> Maillot Domicile 2025/26
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* ── 4. SHOP BY PLAYER SECTION (Real Madrid Style) ───── */}
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-12">
+                <div className="flex items-center justify-between mb-6">
+                    <div>
+                        <span className="text-blue-400 font-bold text-xs uppercase tracking-widest font-display block mb-1">Personnalisation Officielle</span>
+                        <h2 className="text-2xl sm:text-3xl font-black uppercase tracking-tight text-white font-display">
+                            Acheter Par Joueur
+                        </h2>
+                    </div>
+                    <span className="text-xs text-gray-400 hidden sm:inline-block font-semibold">Cliquez pour commander le maillot d'un joueur</span>
+                </div>
+
+                <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+                    {SQUAD_STAR_PLAYERS.map(player => (
+                        <div 
+                            key={player.id}
+                            onClick={() => handleSelectPlayerFromShopByPlayer(player)}
+                            className="group bg-[#0B1528]/80 border border-white/10 hover:border-[#D4AF37]/50 rounded-2xl p-4 text-center cursor-pointer transition-all duration-300 hover:-translate-y-1 shadow-lg hover:shadow-2xl relative overflow-hidden backdrop-blur-md"
+                        >
+                            <div className="w-16 h-16 rounded-full bg-gradient-to-br from-blue-600 to-[#001938] border-2 border-[#D4AF37]/50 mx-auto mb-3 flex items-center justify-center font-black font-mono text-xl text-amber-300 shadow-md group-hover:scale-110 transition-transform">
+                                #{player.number}
+                            </div>
+                            <h4 className="font-black uppercase text-sm text-white font-display group-hover:text-amber-300 transition-colors">
+                                {player.name}
+                            </h4>
+                            <p className="text-[10px] text-gray-400 font-medium uppercase mt-0.5">{player.pos}</p>
+                            
+                            <div className="mt-3 inline-flex items-center gap-1 text-[10px] font-bold uppercase text-blue-400 group-hover:text-white transition-colors">
+                                <span>Commander Maillot</span> <ArrowRight size={10} />
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+
+            {/* ── 5. Main Shop Section & Toolbar ───── */}
+            <div id="shop-collection" className="container mx-auto px-4 sm:px-6 lg:px-8">
                 
-                {/* ── Filter & Search Toolbar ────── */}
-                <div className="mb-8 bg-[#0B1528]/90 border border-white/10 p-6 rounded-2xl backdrop-blur-xl shadow-xl space-y-4">
+                {/* Real Madrid Filter Toolbar */}
+                <div className="bg-[#0B1528]/90 border border-white/10 rounded-2xl p-6 mb-8 backdrop-blur-xl shadow-xl space-y-4">
                     <div className="flex flex-col lg:flex-row items-stretch lg:items-center justify-between gap-4">
                         
                         {/* Search Input */}
@@ -438,20 +529,33 @@ const Shop: React.FC = () => {
                                 placeholder="Rechercher maillot, veste, casquette..."
                                 value={searchTerm}
                                 onChange={e => { setSearchTerm(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
-                                className="w-full bg-[#0E182A] border border-white/10 rounded-xl pl-11 pr-4 py-3 text-sm text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-all font-medium"
+                                className="w-full bg-[#0E182A] border border-white/10 rounded-xl pl-11 pr-4 py-3 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-blue-500 transition-all font-medium"
                             />
                         </div>
 
-                        {/* Sorting Dropdown */}
-                        <div className="flex items-center gap-3">
-                            <span className="text-xs text-gray-400 font-bold uppercase tracking-wider hidden sm:inline-block">Trier Par:</span>
+                        {/* Controls Group */}
+                        <div className="flex flex-wrap items-center gap-4">
+                            
+                            {/* Stock Toggle */}
+                            <label className="flex items-center gap-2 text-xs text-gray-300 font-bold uppercase tracking-wider cursor-pointer">
+                                <input 
+                                    type="checkbox" 
+                                    checked={onlyInStock} 
+                                    onChange={e => setOnlyInStock(e.target.checked)} 
+                                    className="w-4 h-4 text-blue-600 rounded border-white/20 focus:ring-blue-500"
+                                />
+                                En Stock Seulement
+                            </label>
+
+                            {/* Sort Selector */}
                             <div className="relative">
                                 <select
                                     value={sortBy}
                                     onChange={e => setSortBy(e.target.value as SortOption)}
-                                    className="appearance-none bg-[#0E182A] border border-white/10 rounded-xl px-4 py-3 pr-10 text-xs text-white font-bold uppercase tracking-wider focus:outline-none focus:border-blue-500 cursor-pointer"
+                                    className="appearance-none bg-[#0E182A] border border-white/10 rounded-xl px-4 py-3 pr-10 text-xs text-white font-bold uppercase tracking-wider focus:outline-none focus:border-blue-500 cursor-pointer font-display"
                                 >
-                                    <option value="default">Sélection Club</option>
+                                    <option value="default">Tri Par Défaut</option>
+                                    <option value="newest">Nouveautés 2026</option>
                                     <option value="price-asc">Prix: Croissant</option>
                                     <option value="price-desc">Prix: Décroissant</option>
                                 </select>
@@ -459,49 +563,23 @@ const Shop: React.FC = () => {
                             </div>
                         </div>
                     </div>
-
-                    {/* Category Filter Pills */}
-                    <div className="flex items-center justify-between gap-4 border-t border-white/5 pt-4">
-                        <div className="flex items-center gap-2 overflow-x-auto pb-1 scrollbar-none">
-                            {categories.map(cat => {
-                                const active = selectedCategory === cat;
-                                return (
-                                    <button
-                                        key={cat}
-                                        onClick={() => { setSelectedCategory(cat); setVisibleCount(ITEMS_PER_PAGE); }}
-                                        className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex-shrink-0 whitespace-nowrap border ${
-                                            active
-                                                ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/30'
-                                                : 'bg-[#0E182A] border-white/10 text-gray-400 hover:text-white hover:border-white/20'
-                                        }`}
-                                    >
-                                        {cat === 'All' ? 'Tous les Produits' : cat}
-                                    </button>
-                                );
-                            })}
-                        </div>
-
-                        <span className="text-xs font-bold text-gray-400 uppercase tracking-wider shrink-0 hidden md:block">
-                            {filteredProducts.length} Article{filteredProducts.length > 1 ? 's' : ''}
-                        </span>
-                    </div>
                 </div>
 
-                {/* ── Product Showcase Grid ──────── */}
+                {/* ── 6. Product Cards Grid (Real Madrid Style Layout) ───── */}
                 {visibleProducts.length === 0 ? (
                     <div className="text-center py-20 bg-[#0B1528]/80 border border-white/10 rounded-3xl p-10 backdrop-blur-xl">
                         <Package className="w-12 h-12 text-gray-500 mx-auto mb-3" />
-                        <h4 className="text-xl font-bold text-white mb-2">Aucun produit ne correspond à votre recherche</h4>
-                        <p className="text-gray-400 text-sm mb-6 max-w-md mx-auto">Vérifiez vos termes de recherche ou réinitialisez les filtres de la boutique.</p>
+                        <h4 className="text-xl font-bold text-white mb-2">Aucun produit trouvé</h4>
+                        <p className="text-gray-400 text-sm mb-6 max-w-md mx-auto">Vérifiez vos critères de recherche ou réinitialisez les filtres.</p>
                         <button
-                            onClick={() => { setSelectedCategory('All'); setSearchTerm(''); setPriceRange([0, 1000]); setSortBy('default'); }}
-                            className="px-6 py-2.5 bg-blue-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30"
+                            onClick={() => { setSelectedCategory('All'); setSearchTerm(''); setSortBy('default'); setOnlyInStock(false); }}
+                            className="px-6 py-2.5 bg-blue-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-blue-500 transition-colors shadow-lg"
                         >
-                            Réinitialiser la boutique
+                            Réinitialiser Les Filtres
                         </button>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
                         {visibleProducts.map(product => {
                             const isOutOfStock = product.stock <= 0;
                             const isWishlisted = wishlist.includes(product.id);
@@ -509,11 +587,14 @@ const Shop: React.FC = () => {
 
                             return (
                                 <div 
-                                    key={product.id} 
+                                    key={product.id}
                                     className="group bg-[#0B1528]/90 border border-white/10 rounded-3xl overflow-hidden shadow-xl hover:shadow-2xl hover:border-blue-500/40 transition-all duration-300 flex flex-col backdrop-blur-xl relative"
                                 >
                                     {/* Image Container */}
-                                    <div className="relative aspect-[4/5] bg-[#0E182A] overflow-hidden cursor-pointer" onClick={() => handleOpenProductModal(product)}>
+                                    <div 
+                                        className="relative aspect-[4/5] bg-[#0E182A] overflow-hidden cursor-pointer"
+                                        onClick={() => handleOpenProductModal(product)}
+                                    >
                                         <img 
                                             src={product.image_url || '/Assets/bg2.jpg'} 
                                             alt={product.name} 
@@ -522,31 +603,31 @@ const Shop: React.FC = () => {
                                         
                                         <div className="absolute inset-0 bg-gradient-to-t from-[#0B1528] via-transparent to-transparent opacity-60 group-hover:opacity-40 transition-opacity" />
 
-                                        {/* Top Badges */}
+                                        {/* Category & Offer Ribbons */}
                                         <div className="absolute top-4 left-4 flex flex-col gap-1.5 z-10">
-                                            <span className="bg-blue-600 text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg shadow-md font-display">
+                                            <span className="bg-[#002D62] border border-[#D4AF37]/50 text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest rounded-lg shadow-md font-display">
                                                 {product.category}
                                             </span>
                                             {product.id % 2 === 0 && (
-                                                <span className="bg-amber-500 text-slate-950 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest rounded-lg shadow-md font-display flex items-center gap-1">
-                                                    <Sparkles size={10} /> Pro Match
+                                                <span className="bg-[#D4AF37] text-slate-950 px-2.5 py-0.5 text-[9px] font-black uppercase tracking-widest rounded-lg shadow-md font-display flex items-center gap-1">
+                                                    <Sparkles size={10} /> Official Match Kit
                                                 </span>
                                             )}
                                         </div>
 
-                                        {/* Wishlist Heart Button */}
+                                        {/* Wishlist Heart Toggle */}
                                         <button 
                                             onClick={(e) => { e.stopPropagation(); toggleWishlist(product.id); }}
                                             className={`absolute top-4 right-4 z-10 p-2.5 rounded-full border transition-all ${
                                                 isWishlisted 
-                                                    ? 'bg-red-500 border-red-400 text-white' 
+                                                    ? 'bg-red-500 border-red-400 text-white shadow-lg' 
                                                     : 'bg-black/40 border-white/20 text-gray-300 hover:text-white hover:bg-black/60 backdrop-blur-md'
                                             }`}
                                         >
                                             <Heart size={16} fill={isWishlisted ? "currentColor" : "none"} />
                                         </button>
 
-                                        {/* Stock Out Overlay Badge */}
+                                        {/* Out of stock badge */}
                                         {isOutOfStock && (
                                             <div className="absolute inset-0 bg-black/60 backdrop-blur-xs flex items-center justify-center z-10">
                                                 <span className="bg-red-600 text-white font-black text-xs uppercase tracking-widest px-4 py-2 rounded-xl font-display shadow-2xl border border-red-500">
@@ -559,9 +640,9 @@ const Shop: React.FC = () => {
                                         <div className="absolute bottom-4 left-4 right-4 z-10 opacity-0 group-hover:opacity-100 transition-all duration-300 transform translate-y-2 group-hover:translate-y-0 hidden sm:block">
                                             <button 
                                                 onClick={(e) => { e.stopPropagation(); handleOpenProductModal(product); }}
-                                                className="w-full py-2.5 bg-white/90 hover:bg-white text-slate-950 text-xs font-bold uppercase tracking-wider rounded-xl transition-colors shadow-xl flex items-center justify-center gap-2 backdrop-blur-md"
+                                                className="w-full py-2.5 bg-white/90 hover:bg-white text-slate-950 text-xs font-bold uppercase tracking-wider rounded-xl transition-colors shadow-xl flex items-center justify-center gap-2 backdrop-blur-md font-display"
                                             >
-                                                <Eye size={14} /> Aperçu Rapide
+                                                <Eye size={14} /> Aperçu & Personnalisation
                                             </button>
                                         </div>
                                     </div>
@@ -571,12 +652,12 @@ const Shop: React.FC = () => {
                                         <div>
                                             <h3 
                                                 onClick={() => handleOpenProductModal(product)}
-                                                className="text-base font-bold text-white mb-2 leading-snug cursor-pointer hover:text-blue-400 transition-colors line-clamp-2"
+                                                className="text-sm font-bold text-white mb-2 leading-snug cursor-pointer hover:text-blue-400 transition-colors line-clamp-2"
                                             >
                                                 {product.name}
                                             </h3>
                                             
-                                            {/* Size Chips Preview */}
+                                            {/* Size Chips */}
                                             <div className="flex items-center gap-1.5 my-2">
                                                 <span className="text-[10px] text-gray-400 font-bold uppercase mr-1">Tailles:</span>
                                                 {sizes.map(s => (
@@ -587,8 +668,8 @@ const Shop: React.FC = () => {
                                             </div>
                                         </div>
 
-                                        {/* Price & Action Row */}
-                                        <div className="pt-2 border-t border-white/5 flex items-center justify-between">
+                                        {/* Price & Action */}
+                                        <div className="pt-3 border-t border-white/5 flex items-center justify-between">
                                             <div>
                                                 <span className="text-2xl font-black text-white font-mono tabular-nums">
                                                     {product.price} <span className="text-xs text-amber-400 font-bold">DH</span>
@@ -598,10 +679,10 @@ const Shop: React.FC = () => {
                                             <button
                                                 onClick={() => addToCart(product, getDefaultSize(product))}
                                                 disabled={isOutOfStock}
-                                                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md shadow-blue-600/30 flex items-center gap-2"
+                                                className="px-4 py-2.5 bg-[#002D62] hover:bg-blue-600 border border-[#D4AF37]/40 disabled:bg-gray-800 disabled:text-gray-500 disabled:cursor-not-allowed text-white text-xs font-bold uppercase tracking-wider rounded-xl transition-all shadow-md flex items-center gap-2 font-display"
                                             >
-                                                <ShoppingBag size={14} />
-                                                <span className="hidden sm:inline">Ajouter</span>
+                                                <ShoppingBag size={14} className="text-[#D4AF37]" />
+                                                <span>Ajouter</span>
                                             </button>
                                         </div>
                                     </div>
@@ -611,20 +692,20 @@ const Shop: React.FC = () => {
                     </div>
                 )}
 
-                {/* Load More Button */}
+                {/* Load More */}
                 {hasMore && (
                     <div className="text-center mt-12">
                         <button
                             onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
                             className="px-8 py-3.5 bg-[#0B1528] border border-white/15 text-white font-bold uppercase text-xs tracking-widest rounded-2xl hover:bg-white/10 transition-all shadow-xl font-display"
                         >
-                            Charger Plus De Produits
+                            Voir Plus De Produits
                         </button>
                     </div>
                 )}
             </div>
 
-            {/* ── Slide-Over Cart Drawer ───────── */}
+            {/* ── 7. Slide-Over Cart Drawer (Real Madrid Style) ───── */}
             <div className={`fixed inset-0 z-50 transition-all duration-300 ${isCartOpen ? 'visible' : 'invisible'}`}>
                 {/* Backdrop */}
                 <div 
@@ -632,13 +713,13 @@ const Shop: React.FC = () => {
                     onClick={() => setIsCartOpen(false)} 
                 />
                 
-                {/* Drawer Container */}
+                {/* Drawer */}
                 <div className={`absolute top-0 right-0 w-full max-w-md h-full bg-[#0B1528] border-l border-white/10 shadow-2xl transition-transform duration-300 ${isCartOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col z-10`}>
                     
-                    {/* Drawer Header */}
+                    {/* Header */}
                     <div className="p-6 border-b border-white/10 flex justify-between items-center bg-[#0E182A]">
                         <div className="flex items-center gap-3">
-                            <div className="p-2 bg-blue-600/20 border border-blue-500/30 rounded-xl text-blue-400">
+                            <div className="p-2 bg-[#002D62] border border-[#D4AF37]/40 rounded-xl text-[#D4AF37]">
                                 <ShoppingBag size={18} />
                             </div>
                             <div>
@@ -656,34 +737,34 @@ const Shop: React.FC = () => {
                         <div className="bg-[#0E182A] border-b border-white/5 p-4 text-xs">
                             <div className="flex justify-between items-center mb-1.5 text-gray-300">
                                 <span className="flex items-center gap-1.5">
-                                    <Truck size={14} className="text-amber-400" />
+                                    <Truck size={14} className="text-[#D4AF37]" />
                                     {freeShippingRemaining === 0 ? (
-                                        <strong className="text-emerald-400">Félicitations! Vous bénéficiez de la Livraison Gratuite 📦</strong>
+                                        <strong className="text-emerald-400">Livraison Gratuite Activée! 📦</strong>
                                     ) : (
-                                        <>Plus que <strong className="text-amber-400 font-mono">{freeShippingRemaining} DH</strong> pour la livraison gratuite</>
+                                        <>Ajoutez encore <strong className="text-amber-300 font-mono">{freeShippingRemaining} DH</strong> pour la livraison gratuite</>
                                     )}
                                 </span>
                             </div>
                             <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
                                 <div 
-                                    className="bg-gradient-to-r from-blue-500 to-amber-400 h-full transition-all duration-500" 
+                                    className="bg-gradient-to-r from-blue-500 to-[#D4AF37] h-full transition-all duration-500" 
                                     style={{ width: `${freeShippingPercent}%` }}
                                 />
                             </div>
                         </div>
                     )}
 
-                    {/* Drawer Body Content */}
+                    {/* Body Content */}
                     <div className="flex-1 overflow-y-auto p-6 space-y-4">
                         
-                        {/* STEP 3: SUCCESS CONFIRMATION */}
+                        {/* STEP 3: SUCCESS */}
                         {checkoutStep === 'success' ? (
                             <div className="h-full flex flex-col items-center justify-center text-center py-8">
                                 <div className="w-16 h-16 bg-emerald-500/20 border border-emerald-500/40 rounded-full flex items-center justify-center mb-4 text-emerald-400 shadow-xl">
                                     <CheckCircle2 size={40} />
                                 </div>
                                 <h3 className="text-2xl font-black uppercase text-white font-display mb-1">Commande Validée!</h3>
-                                <p className="text-gray-300 text-xs max-w-xs mb-6">Votre commande a été enregistrée avec succès. Notre équipe du club préparera votre colis sous peu.</p>
+                                <p className="text-gray-300 text-xs max-w-xs mb-6">Merci pour votre achat sur le Superstore Officiel de l'US Amal Tiznit.</p>
 
                                 {orderResult && (
                                     <div className="w-full bg-white/5 border border-white/10 rounded-2xl p-5 mb-6 text-left space-y-3 text-xs">
@@ -704,18 +785,18 @@ const Shop: React.FC = () => {
 
                                 <button
                                     onClick={() => { setIsCartOpen(false); setCheckoutStep('cart'); setOrderResult(null); }}
-                                    className="w-full py-3.5 bg-blue-600 text-white font-bold uppercase text-xs tracking-wider rounded-xl hover:bg-blue-500 transition-colors shadow-lg shadow-blue-600/30 font-display"
+                                    className="w-full py-3.5 bg-[#002D62] text-white font-bold uppercase text-xs tracking-wider rounded-xl hover:bg-blue-900 transition-colors shadow-lg font-display border border-[#D4AF37]/40"
                                 >
-                                    Continuer Mes Achats Sur La Boutique
+                                    Continuer Mes Achats
                                 </button>
                             </div>
 
                         /* STEP 2: CHECKOUT DETAILS FORM */
                         ) : checkoutStep === 'details' ? (
                             <form id="checkout-form" onSubmit={handleCheckout} className="space-y-4 text-xs">
-                                <div className="bg-blue-600/20 border border-blue-500/40 p-4 rounded-xl flex items-center justify-between text-blue-300">
+                                <div className="bg-[#002D62]/40 border border-[#D4AF37]/30 p-4 rounded-xl flex items-center justify-between text-blue-200">
                                     <span className="font-bold uppercase tracking-wider">Total à payer</span>
-                                    <span className="text-lg font-black font-mono text-white">{cartTotal} DH</span>
+                                    <span className="text-lg font-black font-mono text-amber-300">{cartTotal} DH</span>
                                 </div>
 
                                 {[
@@ -758,17 +839,17 @@ const Shop: React.FC = () => {
                                 </div>
                             </form>
 
-                        /* STEP 1: CART ITEMS LIST */
+                        /* STEP 1: CART LIST */
                         ) : cart.length === 0 ? (
                             <div className="h-full flex flex-col items-center justify-center text-center text-gray-400 py-16">
-                                <ShoppingBag size={48} className="opacity-20 mb-3" />
-                                <p className="text-sm font-medium">Votre panier est actuellement vide</p>
-                                <p className="text-xs text-gray-500 mt-1 mb-4">Découvrez les derniers maillots et articles du club.</p>
+                                <ShoppingBag size={48} className="opacity-20 mb-3 text-[#D4AF37]" />
+                                <p className="text-sm font-medium text-white">Votre panier est vide</p>
+                                <p className="text-xs text-gray-500 mt-1 mb-4">Découvrez nos maillots et tenues officielles.</p>
                                 <button 
                                     onClick={() => setIsCartOpen(false)} 
-                                    className="px-6 py-2.5 bg-blue-600 text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-blue-500 transition-colors"
+                                    className="px-6 py-2.5 bg-[#002D62] text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-blue-900 transition-colors font-display border border-[#D4AF37]/40"
                                 >
-                                    Explorer La Boutique
+                                    Parcourir Le Superstore
                                 </button>
                             </div>
                         ) : (
@@ -820,12 +901,12 @@ const Shop: React.FC = () => {
                                     <div className="flex gap-2">
                                         <input
                                             type="text"
-                                            placeholder="Code Promo (ex: AMAL10)"
+                                            placeholder="Code Promo (ex: HALAAMAL)"
                                             value={promoCode}
                                             onChange={e => setPromoCode(e.target.value)}
-                                            className="flex-1 bg-[#0E182A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white uppercase tracking-wider placeholder-gray-500 focus:outline-none focus:border-blue-500"
+                                            className="flex-1 bg-[#0E182A] border border-white/10 rounded-xl px-3 py-2 text-xs text-white uppercase tracking-wider placeholder-gray-500 focus:outline-none focus:border-blue-500 font-mono"
                                         />
-                                        <button type="submit" className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase rounded-xl transition-colors">
+                                        <button type="submit" className="px-4 py-2 bg-white/10 hover:bg-white/20 text-white font-bold text-xs uppercase rounded-xl transition-colors font-display">
                                             Appliquer
                                         </button>
                                     </div>
@@ -835,7 +916,7 @@ const Shop: React.FC = () => {
                         )}
                     </div>
 
-                    {/* Drawer Footer */}
+                    {/* Footer */}
                     {checkoutStep !== 'success' && cart.length > 0 && (
                         <div className="p-6 border-t border-white/10 bg-[#0E182A] space-y-3">
                             {checkoutStep === 'cart' ? (
@@ -859,7 +940,7 @@ const Shop: React.FC = () => {
 
                                     <button 
                                         onClick={() => setCheckoutStep('details')} 
-                                        className="w-full py-3.5 bg-blue-600 hover:bg-blue-500 text-white font-bold uppercase text-xs tracking-wider rounded-xl transition-all shadow-lg shadow-blue-600/30 flex items-center justify-center gap-2 font-display"
+                                        className="w-full py-3.5 bg-[#002D62] hover:bg-blue-900 border border-[#D4AF37]/40 text-white font-bold uppercase text-xs tracking-wider rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 font-display"
                                     >
                                         Passer La Commande <ArrowRight size={16} />
                                     </button>
@@ -868,7 +949,7 @@ const Shop: React.FC = () => {
                                 <div className="flex gap-3">
                                     <button 
                                         onClick={() => setCheckoutStep('cart')} 
-                                        className="px-5 py-3 border border-white/10 text-gray-300 font-bold uppercase text-xs rounded-xl hover:bg-white/5 transition-colors"
+                                        className="px-5 py-3 border border-white/10 text-gray-300 font-bold uppercase text-xs rounded-xl hover:bg-white/5 transition-colors font-display"
                                     >
                                         Retour
                                     </button>
@@ -876,9 +957,9 @@ const Shop: React.FC = () => {
                                         form="checkout-form" 
                                         type="submit" 
                                         disabled={isSubmitting} 
-                                        className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase text-xs tracking-wider rounded-xl disabled:opacity-60 transition-colors shadow-lg shadow-emerald-600/30 font-display flex items-center justify-center gap-2"
+                                        className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase text-xs tracking-wider rounded-xl disabled:opacity-60 transition-colors shadow-lg font-display flex items-center justify-center gap-2"
                                     >
-                                        {isSubmitting ? 'Validation En Cours…' : 'Confirmer La Commande (COD)'}
+                                        {isSubmitting ? 'Validation...' : 'Confirmer Commande (COD)'}
                                     </button>
                                 </div>
                             )}
@@ -887,7 +968,7 @@ const Shop: React.FC = () => {
                 </div>
             </div>
 
-            {/* ── Product Detail & Customization Modal ── */}
+            {/* ── 8. Real Madrid Style Kit Configurator & Product Modal ───── */}
             {selectedProduct && (
                 <Modal
                     isOpen={!!selectedProduct}
@@ -896,30 +977,58 @@ const Shop: React.FC = () => {
                 >
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-8 text-slate-700">
                         
-                        {/* Image Showcase */}
+                        {/* Jersey Front & Back Live Visualiser */}
                         <div className="space-y-4">
-                            <div className="aspect-square bg-slate-100 rounded-2xl overflow-hidden border border-slate-200 shadow-md relative">
+                            <div className="aspect-square bg-slate-900 rounded-2xl overflow-hidden border border-slate-200 shadow-md relative group">
+                                
+                                {/* Front vs Back Image Switcher */}
                                 <img 
                                     src={selectedProduct.image_url || '/Assets/bg2.jpg'} 
                                     alt={selectedProduct.name} 
-                                    className="w-full h-full object-cover"
+                                    className={`w-full h-full object-cover transition-opacity duration-300 ${activeTab === 'back' && (flocageOption !== 'none') ? 'brightness-50' : ''}`}
                                 />
 
-                                {/* Live Flocage Preview Overlay for Jerseys */}
+                                {/* Real-time Jersey Back Canvas Flocage */}
                                 {(flocageOption !== 'none') && (
-                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center bg-black/20 backdrop-blur-xs">
-                                        <span className="text-3xl sm:text-4xl font-black font-display text-white tracking-widest drop-shadow-md uppercase">
+                                    <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center bg-[#001226]/85 backdrop-blur-xs p-6 border-4 border-[#D4AF37]/40">
+                                        <span className="text-gray-400 text-[10px] uppercase font-bold tracking-[0.3em] mb-2 font-display">US AMAL TIZNIT</span>
+                                        <span className="text-3xl sm:text-4xl font-black font-display text-white tracking-widest drop-shadow-lg uppercase mb-1">
                                             {flocageOption === 'player' ? selectedPlayerFlocage.name : (customName || 'VOTRE NOM')}
                                         </span>
-                                        <span className="text-6xl sm:text-7xl font-black font-mono text-amber-400 drop-shadow-md">
+                                        <span className="text-7xl sm:text-8xl font-black font-mono text-[#D4AF37] drop-shadow-2xl">
                                             {flocageOption === 'player' ? selectedPlayerFlocage.number : (customNumber || '10')}
                                         </span>
+                                        <span className="mt-4 text-[9px] font-bold text-amber-300/80 border border-amber-400/30 px-3 py-1 rounded-full uppercase font-display">FLOCAGE OFFICIEL BOTOLA PRO</span>
                                     </div>
                                 )}
                             </div>
+
+                            {/* View Switch Buttons */}
+                            <div className="flex justify-center gap-2">
+                                <button
+                                    onClick={() => setActiveTab('front')}
+                                    className={`px-4 py-1.5 text-xs font-bold uppercase rounded-lg border transition-all ${
+                                        activeTab === 'front' 
+                                            ? 'bg-[#002D62] text-white border-[#002D62]' 
+                                            : 'bg-white text-slate-700 border-slate-200'
+                                    }`}
+                                >
+                                    Vue Face
+                                </button>
+                                <button
+                                    onClick={() => setActiveTab('back')}
+                                    className={`px-4 py-1.5 text-xs font-bold uppercase rounded-lg border transition-all ${
+                                        activeTab === 'back' 
+                                            ? 'bg-[#002D62] text-white border-[#002D62]' 
+                                            : 'bg-white text-slate-700 border-slate-200'
+                                    }`}
+                                >
+                                    Vue Dos (Flocage)
+                                </button>
+                            </div>
                         </div>
 
-                        {/* Configurator & Details */}
+                        {/* Configurator Controls */}
                         <div className="space-y-6 flex flex-col justify-between">
                             <div>
                                 <div className="flex items-center justify-between mb-2">
@@ -936,19 +1045,13 @@ const Shop: React.FC = () => {
                                 </h2>
 
                                 <div className="text-3xl font-black text-[#002D62] font-mono mb-4">
-                                    {selectedProduct.price + (flocageOption !== 'none' ? 30 : 0) + (addPatch ? 20 : 0)} <span className="text-sm text-slate-500 font-bold">DH</span>
+                                    {selectedProduct.price + (flocageOption !== 'none' ? 40 : 0) + (addPatch ? 25 : 0)} <span className="text-sm text-slate-500 font-bold">DH</span>
                                 </div>
-
-                                {selectedProduct.description && (
-                                    <p className="text-xs text-slate-600 leading-relaxed mb-6">
-                                        {selectedProduct.description}
-                                    </p>
-                                )}
 
                                 {/* Size Selector */}
                                 <div className="mb-6">
                                     <label className="text-xs font-bold text-[#002D62] uppercase tracking-wider block mb-2 font-display">
-                                        Choisir la Taille
+                                        Sélectionner La Taille
                                     </label>
                                     <div className="flex flex-wrap gap-2">
                                         {getSizes(selectedProduct).map(s => (
@@ -967,13 +1070,11 @@ const Shop: React.FC = () => {
                                     </div>
                                 </div>
 
-                                {/* Jersey Flocage Customization Section (For Jerseys/Shirts) */}
-                                <div className="bg-slate-50 border border-slate-200 p-4 rounded-xl space-y-4">
-                                    <div className="flex items-center justify-between">
-                                        <span className="text-xs font-bold uppercase text-[#002D62] font-display flex items-center gap-1.5">
-                                            <Shirt size={16} className="text-[#D4AF37]" /> Personnalisation Flocage (+30 DH)
-                                        </span>
-                                    </div>
+                                {/* Real Madrid Style Flocage Customizer */}
+                                <div className="bg-slate-50 border border-slate-200 p-4 rounded-2xl space-y-4">
+                                    <span className="text-xs font-bold uppercase text-[#002D62] font-display flex items-center gap-1.5">
+                                        <Shirt size={16} className="text-[#D4AF37]" /> Personnaliser Votre Maillot (+40 DH)
+                                    </span>
 
                                     <div className="grid grid-cols-3 gap-2 text-xs font-bold uppercase">
                                         {[
@@ -983,8 +1084,8 @@ const Shop: React.FC = () => {
                                         ].map(opt => (
                                             <button
                                                 key={opt.id}
-                                                onClick={() => setFlocageOption(opt.id as any)}
-                                                className={`py-2 px-2 rounded-lg border text-center transition-all ${
+                                                onClick={() => { setFlocageOption(opt.id as any); setActiveTab('back'); }}
+                                                className={`py-2 px-2 rounded-xl border text-center transition-all ${
                                                     flocageOption === opt.id
                                                         ? 'bg-[#002D62] text-white border-[#002D62]'
                                                         : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-100'
@@ -995,7 +1096,7 @@ const Shop: React.FC = () => {
                                         ))}
                                     </div>
 
-                                    {/* Star Player Dropdown */}
+                                    {/* Star Player Selector */}
                                     {flocageOption === 'player' && (
                                         <div className="space-y-2 pt-2">
                                             <label className="text-[10px] font-bold uppercase text-slate-500">Choisir le Joueur Officiel</label>
@@ -1003,31 +1104,31 @@ const Shop: React.FC = () => {
                                                 value={`${selectedPlayerFlocage.name}-${selectedPlayerFlocage.number}`}
                                                 onChange={e => {
                                                     const [n, num] = e.target.value.split('-');
-                                                    setSelectedPlayerFlocage({ name: n, number: num });
+                                                    setSelectedPlayerFlocage({ name: n, number: num, id: 0, pos: '', avatar: '' });
                                                 }}
-                                                className="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs text-slate-800 font-bold focus:outline-none focus:border-blue-600"
+                                                className="w-full bg-white border border-slate-300 rounded-xl p-2.5 text-xs text-slate-800 font-bold focus:outline-none focus:border-blue-600"
                                             >
                                                 {SQUAD_STAR_PLAYERS.map(p => (
                                                     <option key={p.number} value={`${p.name}-${p.number}`}>
-                                                        #{p.number} - {p.name}
+                                                        #{p.number} - {p.name} ({p.pos})
                                                     </option>
                                                 ))}
                                             </select>
                                         </div>
                                     )}
 
-                                    {/* Custom Name & Number Input */}
+                                    {/* Custom Flocage Input */}
                                     {flocageOption === 'custom' && (
                                         <div className="grid grid-cols-2 gap-3 pt-2">
                                             <div>
-                                                <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">Nom (max 12)</label>
+                                                <label className="text-[10px] font-bold uppercase text-slate-500 block mb-1">Nom Sur Le Dos</label>
                                                 <input
                                                     type="text"
                                                     maxLength={12}
                                                     placeholder="EX: MOUAD"
                                                     value={customName}
                                                     onChange={e => setCustomName(e.target.value.toUpperCase())}
-                                                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 uppercase font-mono font-bold focus:outline-none focus:border-blue-600"
+                                                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 uppercase font-mono font-bold focus:outline-none focus:border-blue-600"
                                                 />
                                             </div>
                                             <div>
@@ -1038,13 +1139,13 @@ const Shop: React.FC = () => {
                                                     placeholder="10"
                                                     value={customNumber}
                                                     onChange={e => setCustomNumber(e.target.value.replace(/\D/g, ''))}
-                                                    className="w-full bg-white border border-slate-300 rounded-lg px-3 py-1.5 text-xs text-slate-900 font-mono font-bold focus:outline-none focus:border-blue-600"
+                                                    className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2 text-xs text-slate-900 font-mono font-bold focus:outline-none focus:border-blue-600"
                                                 />
                                             </div>
                                         </div>
                                     )}
 
-                                    {/* Official Patch Checkbox */}
+                                    {/* Sleeve Patch Checkbox */}
                                     <label className="flex items-center gap-2 pt-2 cursor-pointer border-t border-slate-200">
                                         <input
                                             type="checkbox"
@@ -1053,13 +1154,13 @@ const Shop: React.FC = () => {
                                             className="w-4 h-4 text-blue-600 rounded focus:ring-blue-500 cursor-pointer"
                                         />
                                         <span className="text-xs font-bold text-slate-700">
-                                            Ajouter le Patch Officiel Botola Pro (+20 DH) 🇲🇦
+                                            Ajouter le Patch Officiel Botola Pro (+25 DH) 🇲🇦
                                         </span>
                                     </label>
                                 </div>
                             </div>
 
-                            {/* Modal Action Button */}
+                            {/* Submit Button */}
                             <button
                                 onClick={() => {
                                     const fName = flocageOption === 'player' ? selectedPlayerFlocage.name : (flocageOption === 'custom' ? customName : undefined);
@@ -1075,10 +1176,10 @@ const Shop: React.FC = () => {
                                     setSelectedProduct(null);
                                 }}
                                 disabled={selectedProduct.stock <= 0}
-                                className="w-full py-4 bg-[#002D62] hover:bg-blue-900 disabled:bg-slate-300 disabled:text-slate-500 text-white font-bold uppercase text-xs tracking-wider rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 font-display"
+                                className="w-full py-4 bg-[#002D62] hover:bg-blue-900 disabled:bg-slate-300 disabled:text-slate-500 text-white font-bold uppercase text-xs tracking-wider rounded-2xl transition-all shadow-lg flex items-center justify-center gap-2 font-display border border-[#D4AF37]/40"
                             >
-                                <ShoppingBag size={18} />
-                                {selectedProduct.stock > 0 ? 'Ajouter Au Panier' : 'Actuellement Indisponible'}
+                                <ShoppingBag size={18} className="text-[#D4AF37]" />
+                                {selectedProduct.stock > 0 ? 'Ajouter Au Panier' : 'Indisponible'}
                             </button>
                         </div>
                     </div>
