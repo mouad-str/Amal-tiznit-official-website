@@ -68,6 +68,12 @@ const Players: React.FC = () => {
                 const data = await API.players.getAll();
                 
                 const mappedPlayers: Player[] = data.map((p: APIPlayer) => {
+                    const dbBirth = (p as any).birth_date ? String((p as any).birth_date).slice(0, 10) : null;
+                    const dbAge = (p as any).age;
+                    const dbHeight = (p as any).height;
+                    const dbWeight = (p as any).weight;
+                    const dbFoot = (p as any).foot;
+
                     const birthYear = 1997 + (p.number % 7);
                     const heightCm = 175 + (p.number * 2 % 14);
                     const weightKg = 68 + (p.number % 12);
@@ -81,18 +87,18 @@ const Players: React.FC = () => {
                         image: p.image_url,
                         nationality: p.nationality || 'Maroc 🇲🇦',
                         bio: {
-                            birthDate: `14 Mar ${birthYear}`,
-                            birthPlace: p.number % 2 === 0 ? 'Tiznit, Maroc' : 'Agadir, Maroc',
-                            height: `${heightCm} cm`,
-                            weight: `${weightKg} kg`,
-                            foot: isLeftFoot ? 'Gaucher' : 'Droitier',
+                            birthDate: dbBirth || `14 Mar ${birthYear}`,
+                            birthPlace: (p as any).birth_place || (p.number % 2 === 0 ? 'Tiznit, Maroc' : 'Agadir, Maroc'),
+                            height: dbHeight ? `${dbHeight} cm` : `${heightCm} cm`,
+                            weight: dbWeight ? `${dbWeight} kg` : `${weightKg} kg`,
+                            foot: dbFoot || (isLeftFoot ? 'Gaucher' : 'Droitier'),
                             nationality: p.nationality || 'Maroc 🇲🇦'
                         },
                         stats: {
-                            matchesPlayed: p.matches_played || 18,
+                            matchesPlayed: p.matches_played || 0,
                             goals: p.goals || 0,
                             assists: p.assists || 0,
-                            minutesPlayed: p.minutes_played || 1420,
+                            minutesPlayed: p.minutes_played || 0,
                             yellowCards: p.yellow_cards || 0,
                             redCards: p.red_cards || 0
                         }
