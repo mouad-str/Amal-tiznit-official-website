@@ -132,6 +132,39 @@ export default function Navbar() {
                 Players
               </span>
             </Link>
+            <Link
+              to="/teams"
+              className="relative overflow-hidden h-6 group"
+            >
+              <span className="block group-hover:-translate-y-full transition-transform duration-300">
+                Équipes
+              </span>
+              <span className="block absolute top-full left-0 group-hover:translate-y-[-100%] transition-transform duration-300 text-blue-400">
+                Équipes
+              </span>
+            </Link>
+            <Link
+              to="/stadium"
+              className="relative overflow-hidden h-6 group"
+            >
+              <span className="block group-hover:-translate-y-full transition-transform duration-300">
+                Stade
+              </span>
+              <span className="block absolute top-full left-0 group-hover:translate-y-[-100%] transition-transform duration-300 text-blue-400">
+                Stade
+              </span>
+            </Link>
+            <Link
+              to="/vote"
+              className="relative overflow-hidden h-6 group text-amber-400"
+            >
+              <span className="block group-hover:-translate-y-full transition-transform duration-300">
+                🏆 Vote MOTM
+              </span>
+              <span className="block absolute top-full left-0 group-hover:translate-y-[-100%] transition-transform duration-300 text-amber-300 font-black">
+                🏆 Vote MOTM
+              </span>
+            </Link>
           </div>
 
           {/* Desktop Action Buttons */}

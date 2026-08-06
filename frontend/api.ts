@@ -86,6 +86,13 @@ export const API = {
             body: JSON.stringify({ status }),
             headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
         }),
+    },
+    votes: {
+        cast: (playerId: number, monthYear?: string) => apiFetch<{ success: boolean; message: string }>('/votes', {
+            method: 'POST',
+            body: JSON.stringify({ playerId, monthYear })
+        }),
+        getResults: (monthYear?: string) => apiFetch<{ monthYear: string; totalVotes: number; results: any[] }>(`/votes/results${monthYear ? `?monthYear=${monthYear}` : ''}`),
     }
 };
 

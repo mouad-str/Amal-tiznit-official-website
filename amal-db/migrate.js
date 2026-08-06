@@ -121,6 +121,21 @@ async function migrate() {
             )
         `);
 
+        // M009 — Player Team Category & Player Votes
+        await runSafe('[M009] players.team_category',
+            "ALTER TABLE players ADD COLUMN team_category VARCHAR(50) DEFAULT 'Senior' AFTER position");
+
+        await runSafe('[M009] player_votes table', `
+            CREATE TABLE IF NOT EXISTS player_votes (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                player_id INT NOT NULL,
+                month_year VARCHAR(20) NOT NULL,
+                voter_ip VARCHAR(100) DEFAULT '127.0.0.1',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (player_id) REFERENCES players(id) ON DELETE CASCADE
+            )
+        `);
+
         console.log('\n🎉 All migrations completed successfully!');
     } catch (error) {
         console.error('❌ Migration failed:', error.message);
