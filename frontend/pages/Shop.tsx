@@ -1,251 +1,324 @@
-import React, { useState, useEffect } from 'react';
-import { ShoppingBag, Star, ArrowRight, Filter, X, Plus, Minus, Trash2, CheckCircle, Smartphone, MapPin, Mail, User } from 'lucide-react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { ShoppingBag, Search, X, Plus, Minus, Trash2, CheckCircle, Smartphone, MapPin, Mail, User, ChevronDown, Package } from 'lucide-react';
 import { API, Product } from '../api';
 
-interface CartItem extends Product {
+/* ── Types ─────────────────────────────────── */
+
+interface CartItem {
+    productId: number;
+    name: string;
+    price: number;
+    image_url: string;
+    category: string;
     quantity: number;
+    size: string;
+    stock: number;
 }
 
+type SortOption = 'default' | 'price-asc' | 'price-desc';
+
+/* ── Cart persistence helpers ──────────────── */
+
+const CART_KEY = 'usat_shop_cart';
+const loadCart = (): CartItem[] => {
+    try { return JSON.parse(localStorage.getItem(CART_KEY) || '[]'); } catch { return []; }
+};
+const saveCart = (cart: CartItem[]) => localStorage.setItem(CART_KEY, JSON.stringify(cart));
+
+/* ── Constants ─────────────────────────────── */
+
+const ITEMS_PER_PAGE = 9;
+const PHONE_REGEX = /^(\+212|0)[5-7]\d{8}$/;
+
+/* ── Component ─────────────────────────────── */
+
 const Shop = () => {
-    // Data State
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
-    // UI State
+    // Cart
+    const [cart, setCart] = useState<CartItem[]>(loadCart);
     const [isCartOpen, setIsCartOpen] = useState(false);
-    const [cart, setCart] = useState<CartItem[]>([]);
 
-    // Filter State
+    // Filters
     const [selectedCategory, setSelectedCategory] = useState('All');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [sortBy, setSortBy] = useState<SortOption>('default');
     const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
 
-    // Checkout State
+    // Pagination
+    const [visibleCount, setVisibleCount] = useState(ITEMS_PER_PAGE);
+
+    // Product detail modal
+    const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+    const [selectedSize, setSelectedSize] = useState('');
+
+    // Checkout
     const [checkoutStep, setCheckoutStep] = useState<'cart' | 'details' | 'success'>('cart');
-    const [checkoutForm, setCheckoutForm] = useState({
-        name: '',
-        phone: '',
-        email: '',
-        address: ''
-    });
+    const [checkoutForm, setCheckoutForm] = useState({ name: '', phone: '', email: '', address: '' });
+    const [formErrors, setFormErrors] = useState<Record<string, string>>({});
     const [isSubmitting, setIsSubmitting] = useState(false);
+    const [orderResult, setOrderResult] = useState<{ orderId: number; total: number } | null>(null);
+
+    /* ── Data fetch ─────────────────────────── */
 
     useEffect(() => {
-        document.title = "Shop | Amal Tiznit Official";
-        const fetchProducts = async () => {
-            try {
-                const data = await API.shop.getAll();
-                setProducts(data);
-            } catch (error) {
-                console.error('Failed to fetch products:', error);
-            } finally {
-                setLoading(false);
-            }
-        };
-        fetchProducts();
+        document.title = "Boutique Officielle | Amal Tiznit";
+        API.shop.getAll()
+            .then(setProducts)
+            .catch(() => console.error('Failed to fetch products'))
+            .finally(() => setLoading(false));
     }, []);
 
-    // Cart Actions
-    const addToCart = (product: Product) => {
+    /* ── Persist cart ───────────────────────── */
+
+    useEffect(() => { saveCart(cart); }, [cart]);
+
+    /* ── Cart actions ──────────────────────── */
+
+    const addToCart = useCallback((product: Product, size: string) => {
+        if (product.stock <= 0) return;
         setCart(prev => {
-            const existing = prev.find(item => item.id === product.id);
+            const key = `${product.id}-${size}`;
+            const existing = prev.find(i => `${i.productId}-${i.size}` === key);
             if (existing) {
-                return prev.map(item => item.id === product.id ? { ...item, quantity: item.quantity + 1 } : item);
+                if (existing.quantity >= product.stock) return prev;
+                return prev.map(i => `${i.productId}-${i.size}` === key ? { ...i, quantity: i.quantity + 1 } : i);
             }
-            return [...prev, { ...product, quantity: 1 }];
+            return [...prev, {
+                productId: product.id, name: product.name, price: product.price,
+                image_url: product.image_url, category: product.category,
+                quantity: 1, size, stock: product.stock
+            }];
         });
         setIsCartOpen(true);
-    };
+    }, []);
 
-    const removeFromCart = (productId: number) => {
-        setCart(prev => prev.filter(item => item.id !== productId));
-    };
+    const removeFromCart = (productId: number, size: string) =>
+        setCart(prev => prev.filter(i => !(i.productId === productId && i.size === size)));
 
-    const updateQuantity = (productId: number, delta: number) => {
-        setCart(prev => prev.map(item => {
-            if (item.id === productId) {
-                const newQuantity = Math.max(1, item.quantity + delta);
-                return { ...item, quantity: newQuantity };
+    const updateQuantity = (productId: number, size: string, delta: number) =>
+        setCart(prev => prev.map(i => {
+            if (i.productId === productId && i.size === size) {
+                const q = Math.max(1, Math.min(i.stock, i.quantity + delta));
+                return { ...i, quantity: q };
             }
-            return item;
+            return i;
         }));
+
+    const cartTotal = cart.reduce((s, i) => s + i.price * i.quantity, 0);
+    const cartCount = cart.reduce((s, i) => s + i.quantity, 0);
+
+    /* ── Checkout ───────────────────────────── */
+
+    const validateForm = () => {
+        const errors: Record<string, string> = {};
+        if (!checkoutForm.name.trim()) errors.name = 'Nom requis';
+        if (!checkoutForm.email.trim()) errors.email = 'Email requis';
+        else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(checkoutForm.email)) errors.email = 'Email invalide';
+        if (!checkoutForm.phone.trim()) errors.phone = 'Téléphone requis';
+        else if (!PHONE_REGEX.test(checkoutForm.phone.replace(/\s/g, ''))) errors.phone = 'Format: +212XXXXXXXXX ou 06XXXXXXXX';
+        if (!checkoutForm.address.trim()) errors.address = 'Adresse requise';
+        else if (checkoutForm.address.trim().length < 10) errors.address = 'Adresse trop courte (min 10 caractères)';
+        setFormErrors(errors);
+        return Object.keys(errors).length === 0;
     };
 
-    const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
-
-    // Checkout Handling
     const handleCheckout = async (e: React.FormEvent) => {
         e.preventDefault();
+        if (!validateForm()) return;
         setIsSubmitting(true);
         try {
-            const orderData = {
+            const result = await API.orders.create({
                 customer_name: checkoutForm.name,
                 customer_email: checkoutForm.email,
                 customer_phone: checkoutForm.phone,
                 customer_address: checkoutForm.address,
-                items: cart.map(item => ({ product_id: item.id, quantity: item.quantity }))
-            };
-
-            await API.orders.create(orderData);
-
+                items: cart.map(i => ({ product_id: i.productId, quantity: i.quantity }))
+            });
+            setOrderResult({ orderId: result.orderId, total: result.total });
             setCheckoutStep('success');
             setCart([]);
-        } catch (error) {
-            console.error('Checkout failed:', error);
-            alert('Failed to place order. Please try again.');
+        } catch (error: any) {
+            alert(error?.message || 'Erreur lors de la commande. Veuillez réessayer.');
         } finally {
             setIsSubmitting(false);
         }
     };
 
-    // Filtering
-    const categories = ['All', ...new Set(products.map(p => p.category))];
-    const filteredProducts = products.filter(p => {
-        const matchCategory = selectedCategory === 'All' || p.category === selectedCategory;
-        const matchPrice = p.price >= priceRange[0] && p.price <= priceRange[1];
-        return matchCategory && matchPrice;
-    });
+    /* ── Filtering & sorting ───────────────── */
+
+    const categories = useMemo(() => ['All', ...new Set(products.map(p => p.category))], [products]);
+
+    const filteredProducts = useMemo(() => {
+        let result = products.filter(p => {
+            if (selectedCategory !== 'All' && p.category !== selectedCategory) return false;
+            if (p.price < priceRange[0] || p.price > priceRange[1]) return false;
+            if (searchTerm && !p.name.toLowerCase().includes(searchTerm.toLowerCase())) return false;
+            return true;
+        });
+        if (sortBy === 'price-asc') result.sort((a, b) => a.price - b.price);
+        if (sortBy === 'price-desc') result.sort((a, b) => b.price - a.price);
+        return result;
+    }, [products, selectedCategory, priceRange, searchTerm, sortBy]);
+
+    const visibleProducts = filteredProducts.slice(0, visibleCount);
+    const hasMore = visibleCount < filteredProducts.length;
+
+    /* ── Render helpers ─────────────────────── */
+
+    const getSizes = (product: Product) => (product.sizes || 'S,M,L,XL').split(',').map(s => s.trim());
+
+    const getDefaultSize = (product: Product) => {
+        const sizes = getSizes(product);
+        return sizes.includes('M') ? 'M' : sizes[0];
+    };
 
     if (loading) {
         return (
             <div className="min-h-screen bg-transparent pt-32 flex items-center justify-center">
-                <div className="text-white text-xl animate-pulse">Loading store...</div>
+                <div className="flex flex-col items-center gap-3">
+                    <div className="w-10 h-10 border-2 border-blue-500 border-t-transparent rounded-full animate-spin" />
+                    <span className="text-gray-400 text-sm font-semibold uppercase tracking-wider">Chargement de la boutique…</span>
+                </div>
             </div>
         );
     }
 
     return (
-        <div className="min-h-screen bg-transparent pt-24 pb-12 overflow-x-hidden">
+        <div className="min-h-screen bg-transparent pt-24 pb-16 overflow-x-hidden">
 
-            {/* Background Decorations */}
-            <div className="fixed inset-0 pointer-events-none z-[-1]">
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-blue-600/10 rounded-full blur-[100px]"></div>
-                <div className="absolute bottom-0 left-0 w-[500px] h-[500px] bg-red-600/5 rounded-full blur-[100px]"></div>
-            </div>
+            {/* ── Cart Drawer ─────────────────── */}
+            <div className={`fixed inset-0 z-50 transition-all duration-300 ${isCartOpen ? 'visible' : 'invisible'}`}>
+                <div className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300 ${isCartOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setIsCartOpen(false)} />
+                <div className={`absolute top-0 right-0 w-full max-w-md h-full bg-white shadow-2xl transition-transform duration-300 ${isCartOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
 
-            {/* Cart Drawer */}
-            <div className={`fixed inset-0 z-50 transition-all duration-500 ${isCartOpen ? 'visible' : 'invisible'}`}>
-                <div className={`absolute inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-500 ${isCartOpen ? 'opacity-100' : 'opacity-0'}`} onClick={() => setIsCartOpen(false)}></div>
-                <div className={`absolute top-0 right-0 w-full max-w-md h-full bg-white shadow-2xl transition-transform duration-500 transform ${isCartOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col`}>
-
-                    {/* Drawer Header */}
+                    {/* Header */}
                     <div className="p-6 border-b flex justify-between items-center bg-gray-50">
-                        <h2 className="text-xl font-black uppercase italic text-[#001226]">Your Cart ({cart.reduce((a, b) => a + b.quantity, 0)})</h2>
-                        <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors">
-                            <X size={24} />
-                        </button>
+                        <h2 className="text-lg font-black uppercase text-[#001226]">Panier ({cartCount})</h2>
+                        <button onClick={() => setIsCartOpen(false)} className="p-2 hover:bg-gray-200 rounded-full transition-colors"><X size={20} /></button>
                     </div>
 
-                    {/* Drawer Content */}
+                    {/* Content */}
                     <div className="flex-1 overflow-y-auto p-6">
                         {checkoutStep === 'success' ? (
                             <div className="h-full flex flex-col items-center justify-center text-center">
-                                <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mb-6 text-green-600">
-                                    <CheckCircle size={48} />
+                                <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mb-4 text-green-600">
+                                    <CheckCircle size={40} />
                                 </div>
-                                <h3 className="text-2xl font-black uppercase text-[#001226] mb-2">Order Confirmed!</h3>
-                                <p className="text-gray-500 mb-8">Thank you for your purchase. We will contact you shortly.</p>
-                                <button onClick={() => { setIsCartOpen(false); setCheckoutStep('cart'); }} className="px-8 py-3 bg-blue-600 text-white font-bold uppercase tracking-widest rounded-sm hover:bg-blue-700">
-                                    Continue Shopping
+                                <h3 className="text-xl font-black uppercase text-[#001226] mb-1">Commande Confirmée!</h3>
+                                {orderResult && (
+                                    <div className="bg-gray-50 border border-gray-200 rounded-lg px-6 py-4 mb-4 text-left">
+                                        <div className="text-xs text-gray-500 mb-1">Numéro de commande</div>
+                                        <div className="text-lg font-black text-[#001226] tabular-nums">#{orderResult.orderId}</div>
+                                        <div className="text-xs text-gray-500 mt-2 mb-1">Total</div>
+                                        <div className="text-lg font-black text-blue-600 tabular-nums">{orderResult.total} DH</div>
+                                    </div>
+                                )}
+                                <p className="text-gray-500 text-sm mb-6">Merci pour votre achat. Nous vous contacterons sous peu.</p>
+                                <button
+                                    onClick={() => { setIsCartOpen(false); setCheckoutStep('cart'); setOrderResult(null); }}
+                                    className="px-6 py-3 bg-blue-600 text-white font-bold uppercase text-xs tracking-wider rounded hover:bg-blue-700 transition-colors"
+                                >
+                                    Continuer les Achats
                                 </button>
                             </div>
                         ) : checkoutStep === 'details' ? (
-                            <form id="checkout-form" onSubmit={handleCheckout} className="space-y-6">
-                                <div className="bg-blue-50 p-4 rounded-lg flex items-center gap-3 text-blue-800 text-sm mb-6">
-                                    <ShoppingBag size={20} />
-                                    <span className="font-bold">Total to Pay: {cartTotal} DH</span>
+                            <form id="checkout-form" onSubmit={handleCheckout} className="space-y-5">
+                                <div className="bg-blue-50 p-4 rounded-lg flex items-center gap-3 text-blue-800 text-sm">
+                                    <ShoppingBag size={18} />
+                                    <span className="font-bold">Total: {cartTotal} DH</span>
                                 </div>
 
-                                <div className="space-y-4">
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Full Name</label>
-                                        <div className="relative">
-                                            <User className="absolute left-3 top-3 text-gray-400" size={18} />
-                                            <input required type="text" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                                value={checkoutForm.name} onChange={e => setCheckoutForm({ ...checkoutForm, name: e.target.value })} placeholder="John Doe" />
+                                {[
+                                    { key: 'name', label: 'Nom complet', icon: User, type: 'text', placeholder: 'Ahmed El Mansouri' },
+                                    { key: 'phone', label: 'Téléphone', icon: Smartphone, type: 'tel', placeholder: '+212 6XX XXX XXX' },
+                                    { key: 'email', label: 'Email', icon: Mail, type: 'email', placeholder: 'ahmed@example.com' },
+                                ].map(field => {
+                                    const Icon = field.icon;
+                                    return (
+                                        <div key={field.key}>
+                                            <label className="block text-xs font-bold uppercase text-gray-500 mb-1">{field.label}</label>
+                                            <div className="relative">
+                                                <Icon className="absolute left-3 top-3 text-gray-400" size={16} />
+                                                <input
+                                                    required type={field.type}
+                                                    className={`w-full pl-9 pr-4 py-2.5 bg-gray-50 border rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all ${formErrors[field.key] ? 'border-red-300' : 'border-gray-200'}`}
+                                                    value={(checkoutForm as any)[field.key]}
+                                                    onChange={e => { setCheckoutForm({ ...checkoutForm, [field.key]: e.target.value }); setFormErrors(prev => ({ ...prev, [field.key]: '' })); }}
+                                                    placeholder={field.placeholder}
+                                                />
+                                            </div>
+                                            {formErrors[field.key] && <span className="text-xs text-red-500 mt-1 block">{formErrors[field.key]}</span>}
                                         </div>
+                                    );
+                                })}
+
+                                <div>
+                                    <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Adresse de livraison</label>
+                                    <div className="relative">
+                                        <MapPin className="absolute left-3 top-3 text-gray-400" size={16} />
+                                        <textarea
+                                            required
+                                            className={`w-full pl-9 pr-4 py-2.5 bg-gray-50 border rounded text-sm focus:ring-2 focus:ring-blue-500 outline-none transition-all h-20 resize-none ${formErrors.address ? 'border-red-300' : 'border-gray-200'}`}
+                                            value={checkoutForm.address}
+                                            onChange={e => { setCheckoutForm({ ...checkoutForm, address: e.target.value }); setFormErrors(prev => ({ ...prev, address: '' })); }}
+                                            placeholder="Rue, Ville, Code Postal"
+                                        />
                                     </div>
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Phone Number</label>
-                                        <div className="relative">
-                                            <Smartphone className="absolute left-3 top-3 text-gray-400" size={18} />
-                                            <input required type="tel" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                                value={checkoutForm.phone} onChange={e => setCheckoutForm({ ...checkoutForm, phone: e.target.value })} placeholder="+212 6XX XXX XXX" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Email Address</label>
-                                        <div className="relative">
-                                            <Mail className="absolute left-3 top-3 text-gray-400" size={18} />
-                                            <input required type="email" className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                                                value={checkoutForm.email} onChange={e => setCheckoutForm({ ...checkoutForm, email: e.target.value })} placeholder="john@example.com" />
-                                        </div>
-                                    </div>
-                                    <div>
-                                        <label className="block text-xs font-bold uppercase text-gray-500 mb-1">Delivery Address</label>
-                                        <div className="relative">
-                                            <MapPin className="absolute left-3 top-3 text-gray-400" size={18} />
-                                            <textarea required className="w-full pl-10 pr-4 py-3 bg-gray-50 border border-gray-200 rounded focus:ring-2 focus:ring-blue-500 outline-none transition-all h-24 resize-none"
-                                                value={checkoutForm.address} onChange={e => setCheckoutForm({ ...checkoutForm, address: e.target.value })} placeholder="Street, City, Zip Code" />
-                                        </div>
-                                    </div>
+                                    {formErrors.address && <span className="text-xs text-red-500 mt-1 block">{formErrors.address}</span>}
                                 </div>
                             </form>
+                        ) : cart.length === 0 ? (
+                            <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-3">
+                                <ShoppingBag size={48} className="opacity-20" />
+                                <p className="text-sm">Votre panier est vide</p>
+                                <button onClick={() => setIsCartOpen(false)} className="text-blue-600 font-bold text-sm hover:underline">Parcourir la boutique</button>
+                            </div>
                         ) : (
-                            cart.length === 0 ? (
-                                <div className="h-full flex flex-col items-center justify-center text-gray-400 gap-4">
-                                    <ShoppingBag size={64} className="opacity-20" />
-                                    <p>Your cart is empty</p>
-                                    <button onClick={() => setIsCartOpen(false)} className="text-blue-600 font-bold hover:underline">Start Shopping</button>
-                                </div>
-                            ) : (
-                                <div className="space-y-6">
-                                    {cart.map(item => (
-                                        <div key={item.id} className="flex gap-4 bg-white p-2 rounded-lg border border-gray-100 shadow-sm">
-                                            <img src={item.image_url} className="w-20 h-20 object-cover rounded-md bg-gray-100" />
-                                            <div className="flex-1 flex flex-col justify-between">
-                                                <div>
-                                                    <h4 className="font-bold text-[#001226] line-clamp-1">{item.name}</h4>
-                                                    <p className="text-sm text-gray-500">{item.category}</p>
-                                                </div>
-                                                <div className="flex items-center justify-between mt-2">
-                                                    <p className="font-black text-blue-600">{item.price * item.quantity} DH</p>
-                                                    <div className="flex items-center gap-3 bg-gray-50 rounded px-2 py-1">
-                                                        <button onClick={() => updateQuantity(item.id, -1)} className="p-0.5 hover:text-red-500"><Minus size={14} /></button>
-                                                        <span className="text-xs font-bold w-4 text-center">{item.quantity}</span>
-                                                        <button onClick={() => updateQuantity(item.id, 1)} className="p-0.5 hover:text-green-500"><Plus size={14} /></button>
-                                                    </div>
+                            <div className="space-y-4">
+                                {cart.map(item => (
+                                    <div key={`${item.productId}-${item.size}`} className="flex gap-3 bg-white p-3 rounded-lg border border-gray-100">
+                                        <img src={item.image_url} className="w-16 h-16 object-cover rounded bg-gray-100" alt={item.name} />
+                                        <div className="flex-1 min-w-0">
+                                            <h4 className="font-bold text-[#001226] text-sm truncate">{item.name}</h4>
+                                            <p className="text-xs text-gray-400">Taille: {item.size}</p>
+                                            <div className="flex items-center justify-between mt-2">
+                                                <span className="font-black text-blue-600 text-sm">{item.price * item.quantity} DH</span>
+                                                <div className="flex items-center gap-2 bg-gray-50 rounded px-2 py-1">
+                                                    <button onClick={() => updateQuantity(item.productId, item.size, -1)} className="p-0.5 hover:text-red-500"><Minus size={12} /></button>
+                                                    <span className="text-xs font-bold w-4 text-center tabular-nums">{item.quantity}</span>
+                                                    <button onClick={() => updateQuantity(item.productId, item.size, 1)} className="p-0.5 hover:text-green-500"><Plus size={12} /></button>
                                                 </div>
                                             </div>
-                                            <button onClick={() => removeFromCart(item.id)} className="text-gray-300 hover:text-red-500 self-start p-1">
-                                                <Trash2 size={18} />
-                                            </button>
                                         </div>
-                                    ))}
-                                </div>
-                            )
+                                        <button onClick={() => removeFromCart(item.productId, item.size)} className="text-gray-300 hover:text-red-500 self-start p-1"><Trash2 size={16} /></button>
+                                    </div>
+                                ))}
+                            </div>
                         )}
                     </div>
 
-                    {/* Drawer Footer */}
+                    {/* Footer */}
                     {checkoutStep !== 'success' && cart.length > 0 && (
                         <div className="p-6 border-t bg-gray-50">
                             {checkoutStep === 'cart' ? (
                                 <>
-                                    <div className="flex justify-between items-end mb-6">
-                                        <span className="text-gray-500 font-medium">Total</span>
-                                        <span className="text-3xl font-black text-[#001226]">{cartTotal} <span className="text-sm font-bold text-gray-400">DH</span></span>
+                                    <div className="flex justify-between items-end mb-4">
+                                        <span className="text-gray-500 text-sm">Total</span>
+                                        <span className="text-2xl font-black text-[#001226] tabular-nums">{cartTotal} <span className="text-sm font-bold text-gray-400">DH</span></span>
                                     </div>
-                                    <button onClick={() => setCheckoutStep('details')} className="w-full py-4 bg-blue-600 text-white font-black uppercase tracking-widest rounded-sm hover:bg-blue-700 shadow-lg shadow-blue-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3">
-                                        Checkout <ArrowRight size={20} />
+                                    <button onClick={() => setCheckoutStep('details')} className="w-full py-3.5 bg-blue-600 text-white font-bold uppercase text-xs tracking-wider rounded hover:bg-blue-700 transition-colors">
+                                        Passer la Commande
                                     </button>
                                 </>
                             ) : (
-                                <div className="flex gap-4">
-                                    <button onClick={() => setCheckoutStep('cart')} className="px-6 py-4 border border-gray-300 text-gray-600 font-bold uppercase rounded-sm hover:bg-gray-100">
-                                        Back
+                                <div className="flex gap-3">
+                                    <button onClick={() => setCheckoutStep('cart')} className="px-5 py-3 border border-gray-300 text-gray-600 font-bold uppercase text-xs rounded hover:bg-gray-100 transition-colors">
+                                        Retour
                                     </button>
-                                    <button form="checkout-form" type="submit" disabled={isSubmitting} className="flex-1 py-4 bg-green-600 text-white font-black uppercase tracking-widest rounded-sm hover:bg-green-700 shadow-lg shadow-green-600/20 active:scale-[0.98] transition-all flex items-center justify-center gap-3 disabled:opacity-70 disabled:cursor-not-allowed">
-                                        {isSubmitting ? 'Processing...' : 'Place Order'}
+                                    <button form="checkout-form" type="submit" disabled={isSubmitting} className="flex-1 py-3 bg-green-600 text-white font-bold uppercase text-xs tracking-wider rounded hover:bg-green-700 disabled:opacity-60 disabled:cursor-not-allowed transition-colors">
+                                        {isSubmitting ? 'Traitement…' : 'Confirmer la Commande'}
                                     </button>
                                 </div>
                             )}
@@ -254,115 +327,267 @@ const Shop = () => {
                 </div>
             </div>
 
+            {/* ── Product Detail Modal ────────── */}
+            {selectedProduct && (
+                <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+                    <div className="absolute inset-0 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedProduct(null)} />
+                    <div className="relative bg-white rounded-2xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
+                        <button onClick={() => setSelectedProduct(null)} className="absolute top-4 right-4 z-10 p-2 bg-white/80 hover:bg-gray-100 rounded-full transition-colors">
+                            <X size={20} />
+                        </button>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2">
+                            {/* Image */}
+                            <div className="aspect-square bg-gray-100">
+                                <img src={selectedProduct.image_url || '/Assets/bg2.jpg'} alt={selectedProduct.name} className="w-full h-full object-cover" />
+                            </div>
+
+                            {/* Info */}
+                            <div className="p-6 sm:p-8 flex flex-col justify-between">
+                                <div>
+                                    <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">{selectedProduct.category}</span>
+                                    <h2 className="text-xl font-black text-[#001226] uppercase mt-1 leading-tight">{selectedProduct.name}</h2>
+                                    <p className="text-2xl font-black text-blue-600 mt-3 tabular-nums">{selectedProduct.price} <span className="text-sm text-gray-400 font-bold">DH</span></p>
+
+                                    {selectedProduct.description && (
+                                        <p className="text-sm text-gray-500 mt-4 leading-relaxed">{selectedProduct.description}</p>
+                                    )}
+
+                                    {/* Stock status */}
+                                    <div className="mt-4 flex items-center gap-2">
+                                        <span className={`w-2 h-2 rounded-full ${selectedProduct.stock > 0 ? 'bg-green-500' : 'bg-red-500'}`} />
+                                        <span className={`text-xs font-semibold ${selectedProduct.stock > 0 ? 'text-green-600' : 'text-red-600'}`}>
+                                            {selectedProduct.stock > 0 ? `En stock (${selectedProduct.stock})` : 'Rupture de stock'}
+                                        </span>
+                                    </div>
+
+                                    {/* Size selector */}
+                                    <div className="mt-5">
+                                        <span className="text-xs font-bold text-gray-500 uppercase tracking-wider block mb-2">Taille</span>
+                                        <div className="flex flex-wrap gap-2">
+                                            {getSizes(selectedProduct).map(size => (
+                                                <button
+                                                    key={size}
+                                                    onClick={() => setSelectedSize(size)}
+                                                    className={`px-4 py-2 text-xs font-bold uppercase rounded border transition-all ${
+                                                        selectedSize === size
+                                                            ? 'bg-[#001226] text-white border-[#001226]'
+                                                            : 'bg-white text-gray-700 border-gray-200 hover:border-gray-400'
+                                                    }`}
+                                                >
+                                                    {size}
+                                                </button>
+                                            ))}
+                                        </div>
+                                    </div>
+                                </div>
+
+                                {/* Add to cart */}
+                                <button
+                                    onClick={() => {
+                                        addToCart(selectedProduct, selectedSize || getDefaultSize(selectedProduct));
+                                        setSelectedProduct(null);
+                                    }}
+                                    disabled={selectedProduct.stock <= 0}
+                                    className="mt-6 w-full py-3.5 bg-blue-600 text-white font-bold uppercase text-xs tracking-wider rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:text-gray-500 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                                >
+                                    <ShoppingBag size={16} />
+                                    {selectedProduct.stock > 0 ? 'Ajouter au Panier' : 'Indisponible'}
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
+            {/* ── Page Content ─────────────────── */}
             <div className="container mx-auto px-4">
-                {/* Hero Section */}
-                <div className="relative rounded-3xl overflow-hidden mb-16 shadow-2xl h-[400px] md:h-[500px] border border-white/10 group">
-                    <img src="https://images.unsplash.com/photo-1544698310-74ea9d148c68?q=80&w=2070" className="w-full h-full object-cover brightness-50 group-hover:scale-105 transition-transform duration-[2s]" />
-                    <div className="absolute inset-0 bg-gradient-to-r from-[#001226] via-[#001226]/60 to-transparent p-12 md:p-24 flex flex-col justify-center">
-                        <span className="text-blue-500 font-black text-sm uppercase tracking-[0.4em] mb-4 animate-slide-up block">Official Store</span>
-                        <h1 className="text-5xl md:text-7xl font-black text-white uppercase italic leading-none mb-8 animate-slide-up" style={{ animationDelay: '0.1s' }}>
-                            Wear The <br /><span className="text-blue-600 text-stroke">Pride</span>
+
+                {/* Hero — uses local image */}
+                <div className="relative rounded-2xl overflow-hidden mb-12 h-[320px] md:h-[420px] group">
+                    <img src="/Assets/bg.jpg" className="w-full h-full object-cover brightness-[0.35] group-hover:scale-105 transition-transform duration-[2s]" alt="" />
+                    <div className="absolute inset-0 bg-gradient-to-r from-[#001226]/90 via-[#001226]/50 to-transparent p-8 md:p-16 flex flex-col justify-center">
+                        <span className="text-blue-400 font-bold text-xs uppercase tracking-[0.3em] mb-3 block">Boutique Officielle</span>
+                        <h1 className="text-4xl md:text-6xl font-black text-white uppercase leading-none mb-4 tracking-tight">
+                            Portez La <br /><span className="text-blue-500">Fierté</span>
                         </h1>
-                        <p className="text-gray-300 max-w-lg text-lg mb-10 leading-relaxed animate-slide-up" style={{ animationDelay: '0.2s' }}>
-                            Discover the new 2025/26 home and away kits. Engineered for performance, designed for passion.
+                        <p className="text-gray-300 max-w-lg text-sm mb-6 leading-relaxed">
+                            Découvrez la collection officielle 2025/26. Maillots, équipements d'entraînement et accessoires de l'US Amal Tiznit.
                         </p>
-                        <button onClick={() => document.getElementById('shop-grid')?.scrollIntoView({ behavior: 'smooth' })}
-                            className="bg-white text-[#001226] px-10 py-4 font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all w-fit skew-x-[-10deg] animate-slide-up shadow-xl" style={{ animationDelay: '0.3s' }}>
-                            <span className="skew-x-[10deg] inline-block">Shop Collection</span>
+                        <button
+                            onClick={() => document.getElementById('shop-grid')?.scrollIntoView({ behavior: 'smooth' })}
+                            className="bg-white text-[#001226] px-8 py-3 font-bold uppercase text-xs tracking-wider hover:bg-blue-600 hover:text-white transition-all w-fit rounded"
+                        >
+                            Explorer la Collection
                         </button>
                     </div>
                 </div>
 
-                <div className="grid grid-cols-1 lg:grid-cols-4 gap-12" id="shop-grid">
+                {/* Toolbar: Search + Sort + Category */}
+                <div id="shop-grid" className="mb-8 space-y-4">
+                    <div className="flex flex-col md:flex-row items-stretch md:items-center gap-4">
+                        {/* Search */}
+                        <div className="relative flex-1 max-w-md">
+                            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                            <input
+                                type="text"
+                                placeholder="Rechercher un produit…"
+                                value={searchTerm}
+                                onChange={e => { setSearchTerm(e.target.value); setVisibleCount(ITEMS_PER_PAGE); }}
+                                className="w-full bg-[#0B1528]/80 border border-white/10 rounded-lg pl-11 pr-4 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all"
+                            />
+                        </div>
 
-                    {/* Sidebar Filters */}
-                    <div className="lg:col-span-1 space-y-8">
-                        <div className="bg-white/5 backdrop-blur-sm p-8 rounded-2xl border border-white/10 sticky top-32">
-                            <h3 className="text-white font-black uppercase italic text-xl mb-6 flex items-center gap-2">
-                                <Filter size={20} className="text-blue-500" /> Filters
-                            </h3>
-
-                            <div className="space-y-6">
-                                <div>
-                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-4">Category</label>
-                                    <div className="space-y-2">
-                                        {categories.map(cat => (
-                                            <label key={cat} className="flex items-center gap-3 cursor-pointer group">
-                                                <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${selectedCategory === cat ? 'bg-blue-600 border-blue-600' : 'border-gray-500 group-hover:border-blue-400'}`}>
-                                                    {selectedCategory === cat && <CheckCircle size={10} className="text-white" />}
-                                                </div>
-                                                <input type="radio" className="hidden" name="category" checked={selectedCategory === cat} onChange={() => setSelectedCategory(cat)} />
-                                                <span className={`text-sm font-bold uppercase ${selectedCategory === cat ? 'text-white' : 'text-gray-400 group-hover:text-gray-300'}`}>{cat}</span>
-                                            </label>
-                                        ))}
-                                    </div>
-                                </div>
-
-                                <div className="border-t border-white/10 pt-6">
-                                    <label className="text-xs font-bold text-gray-400 uppercase tracking-widest block mb-4">Price Range</label>
-                                    <div className="flex items-center gap-4 text-white text-sm font-bold">
-                                        <span>0 DH</span>
-                                        <input type="range" min="0" max="1000" step="50" className="flex-1 accent-blue-600 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                                            value={priceRange[1]} onChange={e => setPriceRange([0, parseInt(e.target.value)])} />
-                                        <span>{priceRange[1]} DH</span>
-                                    </div>
-                                </div>
-                            </div>
+                        {/* Sort */}
+                        <div className="relative">
+                            <select
+                                value={sortBy}
+                                onChange={e => setSortBy(e.target.value as SortOption)}
+                                className="appearance-none bg-[#0B1528]/80 border border-white/10 rounded-lg px-4 py-3 pr-10 text-sm text-white font-semibold focus:outline-none focus:border-blue-500 cursor-pointer"
+                            >
+                                <option value="default">Tri par défaut</option>
+                                <option value="price-asc">Prix croissant</option>
+                                <option value="price-desc">Prix décroissant</option>
+                            </select>
+                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 pointer-events-none" />
                         </div>
                     </div>
 
-                    {/* Product Grid */}
-                    <div className="lg:col-span-3">
-                        <div className="flex justify-between items-center mb-8 text-white">
-                            <span className="text-sm font-bold opacity-60 uppercase tracking-widest">Showing {filteredProducts.length} Products</span>
-                            {/* Mobile Cart Button trigger could go here if header cart isn't enough */}
-                        </div>
-
-                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-                            {filteredProducts.map((product) => (
-                                <div key={product.id} className="group bg-white rounded-xl overflow-hidden shadow-lg hover:shadow-2xl transition-all duration-500 transform hover:-translate-y-2">
-                                    <div className="relative aspect-[4/5] overflow-hidden bg-gray-100">
-                                        <img
-                                            src={product.image_url || 'https://picsum.photos/seed/product/400/500'}
-                                            alt={product.name}
-                                            className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
-                                        />
-                                        <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                                            <button onClick={() => addToCart(product)} className="bg-white text-black px-8 py-3 font-black uppercase tracking-widest hover:bg-blue-600 hover:text-white transition-all transform scale-90 group-hover:scale-100 duration-300 shadow-xl rounded-sm">
-                                                Add to Cart
-                                            </button>
-                                        </div>
-                                        <div className="absolute top-4 left-4">
-                                            <span className="bg-blue-600 text-white px-3 py-1 text-[10px] font-black uppercase tracking-widest shadow-lg">{product.category}</span>
-                                        </div>
-                                    </div>
-                                    <div className="p-6">
-                                        <h3 className="text-lg font-black uppercase italic text-[#001226] mb-2 leading-tight group-hover:text-blue-600 transition-colors">{product.name}</h3>
-                                        <div className="flex justify-between items-end">
-                                            <p className="text-2xl font-black text-gray-800">{product.price} <span className="text-sm font-bold text-gray-500 align-top">DH</span></p>
-                                            <div className="flex text-yellow-400 gap-0.5">
-                                                {[...Array(5)].map((_, i) => <Star key={i} size={14} fill="currentColor" />)}
-                                            </div>
-                                        </div>
-                                    </div>
-                                </div>
-                            ))}
-                        </div>
+                    {/* Category pills */}
+                    <div className="flex flex-wrap gap-2">
+                        {categories.map(cat => (
+                            <button
+                                key={cat}
+                                onClick={() => { setSelectedCategory(cat); setVisibleCount(ITEMS_PER_PAGE); }}
+                                className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-lg border transition-all ${
+                                    selectedCategory === cat
+                                        ? 'bg-blue-600 text-white border-blue-600'
+                                        : 'bg-white/5 text-gray-400 border-white/10 hover:text-white hover:border-white/20'
+                                }`}
+                            >
+                                {cat === 'All' ? 'Tout' : cat}
+                            </button>
+                        ))}
                     </div>
                 </div>
+
+                {/* Price range */}
+                <div className="mb-8 flex items-center gap-4 text-sm text-gray-400 font-semibold">
+                    <span>0 DH</span>
+                    <input
+                        type="range" min="0" max="1000" step="50"
+                        className="flex-1 max-w-xs accent-blue-600 h-1 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                        value={priceRange[1]}
+                        onChange={e => { setPriceRange([0, parseInt(e.target.value)]); setVisibleCount(ITEMS_PER_PAGE); }}
+                    />
+                    <span className="text-white font-bold">{priceRange[1]} DH</span>
+                </div>
+
+                {/* Results count */}
+                <div className="flex justify-between items-center mb-6">
+                    <span className="text-xs font-bold text-gray-400 uppercase tracking-wider">{filteredProducts.length} produit{filteredProducts.length !== 1 ? 's' : ''}</span>
+                </div>
+
+                {/* Empty state */}
+                {filteredProducts.length === 0 && (
+                    <div className="text-center py-16 bg-white/5 border border-white/10 rounded-2xl">
+                        <Package className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+                        <h4 className="text-lg font-bold text-white mb-1">Aucun produit trouvé</h4>
+                        <p className="text-gray-400 text-sm mb-4">Essayez de modifier vos filtres ou votre recherche.</p>
+                        <button
+                            onClick={() => { setSelectedCategory('All'); setSearchTerm(''); setPriceRange([0, 1000]); setSortBy('default'); }}
+                            className="px-6 py-2 bg-blue-600 text-white font-bold text-xs uppercase rounded hover:bg-blue-700 transition-colors"
+                        >
+                            Réinitialiser les filtres
+                        </button>
+                    </div>
+                )}
+
+                {/* Product Grid */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {visibleProducts.map(product => {
+                        const outOfStock = product.stock <= 0;
+                        return (
+                            <div key={product.id} className="group bg-white rounded-xl overflow-hidden shadow-md hover:shadow-xl transition-all duration-300">
+                                {/* Image with click-to-detail */}
+                                <div
+                                    className="relative aspect-[4/5] overflow-hidden bg-gray-100 cursor-pointer"
+                                    onClick={() => { setSelectedProduct(product); setSelectedSize(getDefaultSize(product)); }}
+                                >
+                                    <img
+                                        src={product.image_url || '/Assets/bg2.jpg'}
+                                        alt={product.name}
+                                        className={`w-full h-full object-cover transition-transform duration-500 group-hover:scale-105 ${outOfStock ? 'opacity-50' : ''}`}
+                                    />
+                                    {/* Category badge */}
+                                    <span className="absolute top-3 left-3 bg-[#001226] text-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded">
+                                        {product.category}
+                                    </span>
+                                    {/* Stock badge */}
+                                    {outOfStock && (
+                                        <span className="absolute top-3 right-3 bg-red-600 text-white px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider rounded">
+                                            Épuisé
+                                        </span>
+                                    )}
+                                </div>
+
+                                {/* Info */}
+                                <div className="p-5">
+                                    <h3
+                                        className="text-sm font-bold text-[#001226] mb-1 leading-snug cursor-pointer hover:text-blue-600 transition-colors line-clamp-2"
+                                        onClick={() => { setSelectedProduct(product); setSelectedSize(getDefaultSize(product)); }}
+                                    >
+                                        {product.name}
+                                    </h3>
+                                    <div className="flex items-center justify-between mt-3">
+                                        <p className="text-lg font-black text-[#001226] tabular-nums">{product.price} <span className="text-xs font-semibold text-gray-400">DH</span></p>
+                                        {product.stock > 0 && product.stock <= 10 && (
+                                            <span className="text-[10px] font-bold text-amber-600 uppercase">Plus que {product.stock}</span>
+                                        )}
+                                    </div>
+
+                                    {/* Always-visible Add to Cart (mobile-friendly) */}
+                                    <button
+                                        onClick={() => addToCart(product, getDefaultSize(product))}
+                                        disabled={outOfStock}
+                                        className="mt-3 w-full py-2.5 bg-blue-600 text-white font-bold uppercase text-[11px] tracking-wider rounded hover:bg-blue-700 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-colors flex items-center justify-center gap-2"
+                                    >
+                                        <ShoppingBag size={14} />
+                                        {outOfStock ? 'Indisponible' : 'Ajouter au Panier'}
+                                    </button>
+                                </div>
+                            </div>
+                        );
+                    })}
+                </div>
+
+                {/* Load More */}
+                {hasMore && (
+                    <div className="text-center mt-10">
+                        <button
+                            onClick={() => setVisibleCount(prev => prev + ITEMS_PER_PAGE)}
+                            className="px-8 py-3 bg-white/5 border border-white/10 text-white font-bold uppercase text-xs tracking-wider rounded-lg hover:bg-white/10 transition-colors"
+                        >
+                            Voir Plus de Produits
+                        </button>
+                    </div>
+                )}
             </div>
 
-            {/* Floating Cart Button */}
-            <button onClick={() => setIsCartOpen(true)} className="fixed bottom-8 right-8 bg-blue-600 text-white p-4 rounded-full shadow-2xl hover:scale-110 transition-transform z-40 group">
-                <ShoppingBag size={28} />
-                {cart.length > 0 && (
-                    <span className="absolute -top-2 -right-2 bg-red-600 text-white w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold border-2 border-[#001226] group-hover:animate-bounce">
-                        {cart.reduce((a, b) => a + b.quantity, 0)}
+            {/* ── Floating Cart Button ────────── */}
+            <button
+                onClick={() => setIsCartOpen(true)}
+                className="fixed bottom-6 right-6 bg-blue-600 text-white p-4 rounded-full shadow-xl hover:bg-blue-700 hover:scale-105 transition-all z-40"
+            >
+                <ShoppingBag size={24} />
+                {cartCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-600 text-white w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold border-2 border-white tabular-nums">
+                        {cartCount}
                     </span>
                 )}
             </button>
         </div>
     );
-}
+};
 
 export default Shop;

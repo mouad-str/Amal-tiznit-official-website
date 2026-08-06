@@ -26,23 +26,37 @@ async function migrate() {
 
     console.log('🔄 Running migrations…');
 
+    const runSafe = async (label, sql) => {
+        try {
+            await connection.execute(sql);
+            console.log(`  ✅ ${label}`);
+        } catch (error) {
+            if (error.code === 'ER_DUP_FIELDNAME' || error.message.includes('Duplicate column')) {
+                console.log(`  ⏭️  ${label} — already applied`);
+            } else {
+                console.warn(`  ⚠️  ${label} — ${error.message}`);
+            }
+        }
+    };
+
     try {
         // M001 — image_url columns → LONGTEXT for base64 support
-        await connection.execute('ALTER TABLE players MODIFY COLUMN image_url LONGTEXT');
-        console.log('  ✅ [M001] players.image_url → LONGTEXT');
+        await runSafe('[M001] players.image_url → LONGTEXT',
+            'ALTER TABLE players MODIFY COLUMN image_url LONGTEXT');
+        await runSafe('[M001] news.image_url → LONGTEXT',
+            'ALTER TABLE news MODIFY COLUMN image_url LONGTEXT');
 
-        await connection.execute('ALTER TABLE news MODIFY COLUMN image_url LONGTEXT');
-        console.log('  ✅ [M001] news.image_url → LONGTEXT');
+        // M002 — Add description column to products
+        await runSafe('[M002] products.description',
+            'ALTER TABLE products ADD COLUMN description TEXT AFTER name');
+
+        // M003 — Add sizes column to products
+        await runSafe('[M003] products.sizes',
+            "ALTER TABLE products ADD COLUMN sizes VARCHAR(255) DEFAULT 'S,M,L,XL' AFTER stock");
 
         console.log('\n🎉 All migrations completed successfully!');
     } catch (error) {
-        // If the column is already the correct type MySQL throws a benign error —
-        // log it as a warning rather than crashing.
-        if (error.code === 'ER_DUP_FIELDNAME' || error.message.includes('Duplicate column')) {
-            console.warn('  ⚠️  Migration already applied — skipping');
-        } else {
-            console.error('❌ Migration failed:', error.message);
-        }
+        console.error('❌ Migration failed:', error.message);
     } finally {
         await connection.end();
     }

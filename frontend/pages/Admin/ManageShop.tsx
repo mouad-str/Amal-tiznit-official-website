@@ -9,10 +9,12 @@ const ManageShop: React.FC = () => {
     const [editingProduct, setEditingProduct] = useState<Product | null>(null);
     const [formData, setFormData] = useState({
         name: '',
+        description: '',
         price: 0,
         image_url: '',
         category: 'Kits',
-        stock: 0
+        stock: 0,
+        sizes: 'S,M,L,XL'
     });
 
     useEffect(() => {
@@ -63,16 +65,18 @@ const ManageShop: React.FC = () => {
         setEditingProduct(product);
         setFormData({
             name: product.name,
+            description: product.description || '',
             price: product.price,
             image_url: product.image_url,
             category: product.category,
-            stock: product.stock
+            stock: product.stock,
+            sizes: product.sizes || 'S,M,L,XL'
         });
         setShowForm(true);
     };
 
     const resetForm = () => {
-        setFormData({ name: '', price: 0, image_url: '', category: 'Kits', stock: 0 });
+        setFormData({ name: '', description: '', price: 0, image_url: '', category: 'Kits', stock: 0, sizes: 'S,M,L,XL' });
     };
 
     if (loading) {
@@ -91,6 +95,11 @@ const ManageShop: React.FC = () => {
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Product Name</label>
                                 <input type="text" value={formData.name} onChange={e => setFormData({ ...formData, name: e.target.value })}
                                     className="w-full border rounded-lg px-4 py-2" required />
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Description</label>
+                                <textarea value={formData.description} onChange={e => setFormData({ ...formData, description: e.target.value })}
+                                    className="w-full border rounded-lg px-4 py-2 h-20 resize-none" placeholder="Product description…" />
                             </div>
                             <div className="grid grid-cols-2 gap-4">
                                 <div>
@@ -113,6 +122,12 @@ const ManageShop: React.FC = () => {
                                     <option>Accessories</option>
                                     <option>Fan Gear</option>
                                 </select>
+                            </div>
+                            <div>
+                                <label className="block text-sm font-bold text-gray-700 mb-1">Available Sizes</label>
+                                <input type="text" value={formData.sizes} onChange={e => setFormData({ ...formData, sizes: e.target.value })}
+                                    className="w-full border rounded-lg px-4 py-2" placeholder="S,M,L,XL,XXL" />
+                                <span className="text-xs text-gray-400 mt-1 block">Comma-separated. Use "Unique" or "Taille 5" for non-clothing items.</span>
                             </div>
                             <div>
                                 <label className="block text-sm font-bold text-gray-700 mb-1">Product Image</label>

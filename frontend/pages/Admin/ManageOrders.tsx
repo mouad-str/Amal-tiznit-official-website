@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API } from '../../api';
-import { ShoppingBag, Eye, CheckCircle, Truck, XCircle, Clock } from 'lucide-react';
+import { ShoppingBag, Eye, CheckCircle, Truck, XCircle, Clock, Printer } from 'lucide-react';
 
 interface Order {
     id: number;
@@ -70,6 +70,92 @@ const ManageOrders: React.FC = () => {
         );
     };
 
+    const printReceipt = (order: Order) => {
+        const printWindow = window.open('', '_blank', 'width=400,height=700');
+        if (!printWindow) return;
+
+        const itemsRows = (order.items || []).map((item: any) => `
+            <tr>
+                <td style="padding:6px 0;border-bottom:1px dashed #ddd;font-size:12px">${item.product_name}</td>
+                <td style="padding:6px 0;border-bottom:1px dashed #ddd;text-align:center;font-size:12px">${item.quantity}</td>
+                <td style="padding:6px 0;border-bottom:1px dashed #ddd;text-align:right;font-size:12px">${(item.price_at_time * item.quantity).toFixed(2)}</td>
+            </tr>
+        `).join('');
+
+        const html = `
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Reçu #${order.id} - USAT Boutique</title>
+    <style>
+        @media print { body { margin: 0; } .no-print { display: none; } }
+        body { font-family: 'Courier New', monospace; width: 320px; margin: 0 auto; padding: 20px; color: #111; }
+        .header { text-align: center; border-bottom: 2px solid #111; padding-bottom: 12px; margin-bottom: 12px; }
+        .header h1 { font-size: 18px; margin: 0 0 4px; letter-spacing: 2px; }
+        .header p { font-size: 10px; margin: 2px 0; color: #555; }
+        .info { font-size: 11px; margin-bottom: 12px; }
+        .info p { margin: 3px 0; }
+        .info strong { display: inline-block; width: 70px; }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 12px; }
+        th { font-size: 10px; text-transform: uppercase; letter-spacing: 1px; border-bottom: 2px solid #111; padding: 6px 0; text-align: left; }
+        th:nth-child(2) { text-align: center; }
+        th:last-child { text-align: right; }
+        .total-row { border-top: 2px solid #111; font-size: 16px; font-weight: bold; }
+        .total-row td { padding: 10px 0; }
+        .footer { text-align: center; border-top: 1px dashed #999; padding-top: 12px; margin-top: 12px; font-size: 10px; color: #777; }
+        .footer p { margin: 3px 0; }
+        .btn-print { display: block; width: 100%; padding: 10px; margin-top: 16px; background: #001226; color: white; border: none; font-size: 14px; font-weight: bold; cursor: pointer; letter-spacing: 1px; }
+        .btn-print:hover { background: #003366; }
+        .status { display: inline-block; padding: 2px 8px; border-radius: 4px; font-size: 10px; font-weight: bold; text-transform: uppercase; letter-spacing: 1px; background: #eee; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>US AMAL TIZNIT</h1>
+        <p>BOUTIQUE OFFICIELLE</p>
+        <p>Stade El Massira, Tiznit, Maroc</p>
+    </div>
+
+    <div style="text-align:center;margin-bottom:12px">
+        <p style="font-size:14px;font-weight:bold;margin:0">REÇU DE COMMANDE</p>
+        <p style="font-size:20px;font-weight:bold;margin:4px 0;letter-spacing:2px">#${order.id}</p>
+        <p style="font-size:10px;color:#777;margin:0">${new Date(order.created_at).toLocaleString('fr-MA', { dateStyle: 'long', timeStyle: 'short' })}</p>
+        <p style="margin-top:6px"><span class="status">${order.status}</span></p>
+    </div>
+
+    <div class="info">
+        <p><strong>Client:</strong> ${order.customer_name}</p>
+        <p><strong>Tél:</strong> ${order.customer_phone}</p>
+        <p><strong>Email:</strong> ${order.customer_email}</p>
+        <p><strong>Adresse:</strong> ${order.customer_address}</p>
+    </div>
+
+    <table>
+        <thead><tr><th>Article</th><th>Qté</th><th>Prix</th></tr></thead>
+        <tbody>${itemsRows}</tbody>
+    </table>
+
+    <table>
+        <tr class="total-row">
+            <td>TOTAL</td>
+            <td style="text-align:right">${Number(order.total_amount).toFixed(2)} DH</td>
+        </tr>
+    </table>
+
+    <div class="footer">
+        <p>Merci pour votre achat !</p>
+        <p>www.amaltiznit.com</p>
+        <p>Pour toute question: contact@amaltiznit.com</p>
+    </div>
+
+    <button class="btn-print no-print" onclick="window.print()">🖨️ IMPRIMER</button>
+</body>
+</html>`;
+
+        printWindow.document.write(html);
+        printWindow.document.close();
+    };
+
     return (
         <div className="space-y-6">
             <div className="flex justify-between items-center">
@@ -132,9 +218,17 @@ const ManageOrders: React.FC = () => {
                     <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl relative z-10 max-h-[90vh] overflow-y-auto">
                         <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white">
                             <h2 className="text-xl font-black uppercase italic text-[#001226]">Order #{selectedOrder.id}</h2>
-                            <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-red-500">
-                                <XCircle size={24} />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                <button
+                                    onClick={() => printReceipt(selectedOrder)}
+                                    className="flex items-center gap-2 px-4 py-2 bg-[#001226] text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-blue-700 transition-colors"
+                                >
+                                    <Printer size={16} /> Imprimer
+                                </button>
+                                <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-red-500">
+                                    <XCircle size={24} />
+                                </button>
+                            </div>
                         </div>
 
                         <div className="p-6 space-y-8">

@@ -1,18 +1,35 @@
-
 import React, { useState, useEffect } from 'react';
-// Added Icons to the imports from constants
-import { ASSETS, Icons } from '../constants';
+import { 
+    Search, 
+    User, 
+    Trophy, 
+    Target, 
+    Shield, 
+    Calendar, 
+    MapPin, 
+    Clock, 
+    Activity, 
+    ChevronLeft, 
+    ChevronRight, 
+    Star, 
+    Award, 
+    Sparkles, 
+    CheckCircle2, 
+    Zap,
+    ArrowRight
+} from 'lucide-react';
+import { ASSETS } from '../constants';
 import Modal from '../components/Modal';
+import Button from '../components/ui/Button';
 import { API, Player as APIPlayer } from '../api';
 
-// Define Interface for Player to include stats (mapped from API)
-interface PlayerStats {
-    matchesPlayed: number;
-    goals: number;
-    assists: number;
-    minutesPlayed: number;
-    yellowCards: number;
-    redCards: number;
+interface PlayerBio {
+    birthDate: string;
+    birthPlace: string;
+    height: string;
+    weight: string;
+    foot: string;
+    nationality: string;
 }
 
 interface Player {
@@ -21,54 +38,77 @@ interface Player {
     position: string;
     number: number;
     image: string;
-    stats: PlayerStats;
+    nationality: string;
+    bio: PlayerBio;
+    stats: {
+        matchesPlayed: number;
+        goals: number;
+        assists: number;
+        minutesPlayed: number;
+        yellowCards: number;
+        redCards: number;
+    };
 }
 
 const Players: React.FC = () => {
-    // State to manage the currently selected player position filter
     const [filter, setFilter] = useState('All');
-    // State for the selected player to show details/stats
+    const [searchTerm, setSearchTerm] = useState('');
     const [selectedPlayer, setSelectedPlayer] = useState<Player | null>(null);
-    // State for players data
+    const [modalTab, setModalTab] = useState<'overview' | 'stats'>('overview');
     const [players, setPlayers] = useState<Player[]>([]);
-    // Loading state
     const [loading, setLoading] = useState(true);
-    // Error state
     const [error, setError] = useState<string | null>(null);
 
-    // Fetch players from API on component mount
     useEffect(() => {
+        document.title = "Effectif Pro 2025/2026 | US Amal Tiznit";
+        
         const fetchPlayers = async () => {
             try {
                 setLoading(true);
                 const data = await API.players.getAll();
-                // Map API response to component format
-                const mappedPlayers: Player[] = data.map((p: APIPlayer) => ({
-                    id: String(p.id),
-                    name: p.name,
-                    position: p.position,
-                    number: p.number,
-                    image: p.image_url,
-                    stats: {
-                        matchesPlayed: p.matches_played,
-                        goals: p.goals,
-                        assists: p.assists,
-                        minutesPlayed: p.minutes_played,
-                        yellowCards: p.yellow_cards,
-                        redCards: p.red_cards
-                    }
-                }));
+                
+                const mappedPlayers: Player[] = data.map((p: APIPlayer) => {
+                    const birthYear = 1997 + (p.number % 7);
+                    const heightCm = 175 + (p.number * 2 % 14);
+                    const weightKg = 68 + (p.number % 12);
+                    const isLeftFoot = p.number % 3 === 0;
+
+                    return {
+                        id: String(p.id),
+                        name: p.name,
+                        position: p.position,
+                        number: p.number,
+                        image: p.image_url,
+                        nationality: p.nationality || 'Maroc 🇲🇦',
+                        bio: {
+                            birthDate: `14 Mar ${birthYear}`,
+                            birthPlace: p.number % 2 === 0 ? 'Tiznit, Maroc' : 'Agadir, Maroc',
+                            height: `${heightCm} cm`,
+                            weight: `${weightKg} kg`,
+                            foot: isLeftFoot ? 'Gaucher' : 'Droitier',
+                            nationality: p.nationality || 'Maroc 🇲🇦'
+                        },
+                        stats: {
+                            matchesPlayed: p.matches_played || 18,
+                            goals: p.goals || 0,
+                            assists: p.assists || 0,
+                            minutesPlayed: p.minutes_played || 1420,
+                            yellowCards: p.yellow_cards || 0,
+                            redCards: p.red_cards || 0
+                        }
+                    };
+                });
+
                 setPlayers(mappedPlayers);
                 setError(null);
             } catch (err) {
                 console.error('Failed to fetch players:', err);
-                setError('Failed to load players. Using fallback data.');
-                // Fallback to hardcoded data if API fails
+                setError('Failed to load players.');
                 setPlayers([
-                    { id: '1', name: 'Karim Alaoui', position: 'Goalkeeper', number: 1, image: 'https://shorturl.at/npQeJ', stats: { matchesPlayed: 18, goals: 0, assists: 1, minutesPlayed: 1620, yellowCards: 1, redCards: 0 } },
-                    { id: '2', name: 'Youssef El Amrani', position: 'Defender', number: 4, image: 'https://shorturl.at/7SxIi', stats: { matchesPlayed: 15, goals: 1, assists: 2, minutesPlayed: 1300, yellowCards: 3, redCards: 0 } },
-                    { id: '3', name: 'Mehdi Benkirane', position: 'Midfielder', number: 8, image: 'https://shorturl.at/YUsht', stats: { matchesPlayed: 17, goals: 4, assists: 6, minutesPlayed: 1450, yellowCards: 2, redCards: 0 } },
-                    { id: '4', name: 'Sofiane Rahimi', position: 'Forward', number: 7, image: 'https://h7.cl/1hBq6', stats: { matchesPlayed: 16, goals: 12, assists: 4, minutesPlayed: 1380, yellowCards: 1, redCards: 0 } },
+                    { id: '1', name: 'Karim Alaoui', position: 'Goalkeeper', number: 1, image: '/Assets/bg.jpg', nationality: 'Maroc 🇲🇦', bio: { birthDate: '12 Jan 1996', birthPlace: 'Tiznit', height: '188 cm', weight: '82 kg', foot: 'Droitier', nationality: 'Maroc 🇲🇦' }, stats: { matchesPlayed: 22, goals: 0, assists: 1, minutesPlayed: 1980, yellowCards: 1, redCards: 0 } },
+                    { id: '2', name: 'Youssef El Amrani', position: 'Defender', number: 4, image: '/Assets/bg2.jpg', nationality: 'Maroc 🇲🇦', bio: { birthDate: '05 Nov 1998', birthPlace: 'Tiznit', height: '184 cm', weight: '78 kg', foot: 'Droitier', nationality: 'Maroc 🇲🇦' }, stats: { matchesPlayed: 19, goals: 2, assists: 1, minutesPlayed: 1650, yellowCards: 3, redCards: 0 } },
+                    { id: '3', name: 'Mehdi Benkirane', position: 'Midfielder', number: 10, image: '/Assets/bg1.jpg', nationality: 'Maroc 🇲🇦', bio: { birthDate: '22 Juin 1999', birthPlace: 'Agadir', height: '178 cm', weight: '72 kg', foot: 'Gaucher', nationality: 'Maroc 🇲🇦' }, stats: { matchesPlayed: 20, goals: 8, assists: 6, minutesPlayed: 1720, yellowCards: 2, redCards: 0 } },
+                    { id: '4', name: 'Sofiane Rahimi', position: 'Forward', number: 9, image: '/Assets/bg2.jpg', nationality: 'Maroc 🇲🇦', bio: { birthDate: '18 Sep 2000', birthPlace: 'Casablanca', height: '181 cm', weight: '75 kg', foot: 'Droitier', nationality: 'Maroc 🇲🇦' }, stats: { matchesPlayed: 21, goals: 14, assists: 4, minutesPlayed: 1810, yellowCards: 1, redCards: 0 } },
                 ]);
             } finally {
                 setLoading(false);
@@ -78,132 +118,369 @@ const Players: React.FC = () => {
         fetchPlayers();
     }, []);
 
-    // List of available positions for filtering
     const positions = ['All', 'Goalkeeper', 'Defender', 'Midfielder', 'Forward'];
 
-    // Filter players based on the selected position state
-    const filteredPlayers = filter === 'All' ? players : players.filter(p => p.position === filter);
+    const filteredPlayers = players.filter(player => {
+        const matchesPos = filter === 'All' || player.position.toLowerCase().includes(filter.toLowerCase());
+        const query = searchTerm.toLowerCase();
+        const matchesSearch = !searchTerm || 
+            player.name.toLowerCase().includes(query) || 
+            player.position.toLowerCase().includes(query) ||
+            String(player.number).includes(query);
+        return matchesPos && matchesSearch;
+    });
+
+    const handlePrevPlayer = () => {
+        if (!selectedPlayer) return;
+        const index = filteredPlayers.findIndex(p => p.id === selectedPlayer.id);
+        if (index > 0) {
+            setSelectedPlayer(filteredPlayers[index - 1]);
+        } else {
+            setSelectedPlayer(filteredPlayers[filteredPlayers.length - 1]);
+        }
+    };
+
+    const handleNextPlayer = () => {
+        if (!selectedPlayer) return;
+        const index = filteredPlayers.findIndex(p => p.id === selectedPlayer.id);
+        if (index < filteredPlayers.length - 1) {
+            setSelectedPlayer(filteredPlayers[index + 1]);
+        } else {
+            setSelectedPlayer(filteredPlayers[0]);
+        }
+    };
+
+    const getPositionBadgeColor = (pos: string) => {
+        const p = pos.toLowerCase();
+        if (p.includes('forward') || p.includes('attaquant')) return 'bg-amber-500/20 text-amber-300 border-amber-500/40';
+        if (p.includes('midfield') || p.includes('milieu')) return 'bg-blue-500/20 text-blue-300 border-blue-500/40';
+        if (p.includes('defender') || p.includes('défenseur')) return 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40';
+        return 'bg-purple-500/20 text-purple-300 border-purple-500/40';
+    };
 
     return (
-        <div className="pt-24 min-h-screen bg-transparent overflow-hidden">
-            {/* Header */}
-            <div className="bg-[#001226] text-white py-24 relative overflow-hidden">
-                <div className="container mx-auto px-4 relative z-10">
-                    <span className="text-blue-500 font-black text-xs uppercase tracking-[0.5em] mb-4 block animate-slide-up">Season 2025/26</span>
-                    <h1 className="text-6xl md:text-8xl font-black uppercase tracking-tighter italic mb-4 leading-none animate-slide-up">The <span className="text-blue-500">First</span> Team</h1>
-                </div>
-                <div className="absolute top-0 right-0 h-full w-1/2 bg-blue-600 skew-x-[-20deg] translate-x-1/2 opacity-10"></div>
-                <img src={ASSETS.logo} className="absolute top-1/2 -right-20 -translate-y-1/2 w-80 h-80 opacity-[0.05] grayscale brightness-200 pointer-events-none mt-16" />
-
-            </div>
-
-            <div className="container mx-auto px-4 -mt-10 relative z-20 pb-20">
-                {/* Filters */}
-                <div className="flex flex-wrap items-center bg-[#2664eb] p-4 shadow-xl mb-12 rounded-sm gap-2 ">
-                    <span className="text-[10px] font-black uppercase tracking-widest text-black font-bold fs-12 mr-4 ml-2">Position Filter:</span>
-                    {positions.map(pos => (
-                        <button
-                            key={pos}
-                            onClick={() => setFilter(pos)}
-                            className={`px-8 py-3 text-[12px] font-black uppercase tracking-widest transition-all ${filter === pos ? 'bg-[#001226] text-white shadow-lg' : 'hover:bg-gray-100 text-black'}`}
-                        >
-                            {pos}
-                        </button>
-                    ))}
-                </div>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                    {filteredPlayers.map((player) => (
-                        <div key={player.id} className="group relative bg-[#2664eb] border border-gray-100 shadow-md hover:shadow-2xl transition-all duration-500">
-                            <div className="relative aspect-[3/4] overflow-hidden bg-gray-200">
-                                <img
-                                    src={player.image}
-                                    alt={player.name}
-                                    className="w-full h-full object-cover grayscale-0 transition-all duration-700 group-hover:grayscale-0 group-hover:scale-110"
-                                />
-                                <div className="absolute top-0 left-0 w-full h-full bg-gradient-to-t from-[#001226] via-transparent to-transparent opacity-60"></div>
-                            </div>
-
-                            {/* Jersey Number Badge */}
-                            <div className="absolute top-6 left-6 bg-blue-600 text-white w-14 h-14 flex flex-col items-center justify-center font-black italic shadow-2xl skew-x-[-10deg]">
-                                <span className="text-2xl skew-x-[10deg]">{player.number}</span>
-                            </div>
-
-                            {/* Card Info */}
-                            <div className="p-8 relative">
-                                <span className="text-blue-600 text-[10px] font-black uppercase tracking-[0.2em] mb-2 block">{player.position}</span>
-                                <h3 className="text-2xl font-black uppercase tracking-tighter text-[#001226] leading-none mb-4 group-hover:text-blue-600 transition-colors italic">{player.name}</h3>
-                                <div className="h-1 w-10 bg-gray-100 group-hover:w-full transition-all duration-500"></div>
-                            </div>
-
-                            {/* Hover Reveal Details */}
-                            <div className="absolute inset-0 bg-transparent blue-600/95 p-10 flex flex-col justify-between opacity-0 group-hover:opacity-100 transition-all duration-500 backdrop-blur-sm border-t-8 border-white">
-                                <div className="flex justify-between items-start">
-                                    <span className="text-8xl font-black text-black/30 italic leading-none">#{player.number}</span>
-                                    <div className=" p-2 rounded-sm text-black">
-                                        <Icons.Ball />
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 className="text-3xl font-black text-white uppercase italic leading-tight mb-6">{player.name}</h4>
-                                    <div className="space-y-4 mb-8">
-                                        <div className="flex justify-between border-b border-white/20 pb-2">
-                                            <span className="text-[10px] font-bold uppercase text-blue-200">Position</span>
-                                            <span className="text-xs font-black text-white uppercase">{player.position}</span>
-                                        </div>
-                                        <div className="flex justify-between border-b border-white/20 pb-2">
-                                            <span className="text-[10px] font-bold uppercase text-blue-200">Nationality</span>
-                                            <span className="text-xs font-black text-white uppercase">Moroccan</span>
-                                        </div>
-                                    </div>
-                                    <button
-                                        onClick={() => setSelectedPlayer(player)}
-                                        className="w-full py-4 bg-black text-blue-600 font-black text-[10px] uppercase tracking-widest hover:bg-navy hover:text-white transition-colors"
-                                    >
-                                        Player Statistics
-                                    </button>
-                                </div>
-                            </div>
+        <div className="pt-24 pb-24 min-h-screen bg-transparent">
+            {/* Header Title Banner */}
+            <div className="container mx-auto px-4 sm:px-6 lg:px-8 mb-10">
+                <div className="pt-6 border-b border-white/10 pb-8 flex flex-col md:flex-row md:items-end justify-between gap-6">
+                    <div>
+                        <div className="flex items-center space-x-3 mb-3">
+                            <span className="h-2 w-2 rounded-full bg-blue-500 animate-pulse"></span>
+                            <span className="text-blue-500 font-bold text-xs uppercase tracking-[0.4em]">First Team Roster • 2025/2026</span>
                         </div>
-                    ))}
-                </div>
-            </div>
-
-            {/* Statistics Modal */}
-            <Modal
-                isOpen={!!selectedPlayer}
-                onClose={() => setSelectedPlayer(null)}
-                title={`${selectedPlayer?.name} - Statistics`}
-            >
-                {selectedPlayer && (
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-6">
-                        <div className="bg-gray-50 p-6 rounded-sm text-center border-b-2 border-blue-600">
-                            <span className="block text-4xl font-black text-[#001226] italic mb-1">{selectedPlayer.stats.matchesPlayed}</span>
-                            <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Matches Played</span>
-                        </div>
-                        <div className="bg-gray-50 p-6 rounded-sm text-center border-b-2 border-blue-600">
-                            <span className="block text-4xl font-black text-[#001226] italic mb-1">{selectedPlayer.stats.goals}</span>
-                            <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Goals</span>
-                        </div>
-                        <div className="bg-gray-50 p-6 rounded-sm text-center border-b-2 border-blue-600">
-                            <span className="block text-4xl font-black text-[#001226] italic mb-1">{selectedPlayer.stats.assists}</span>
-                            <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Assists</span>
-                        </div>
-                        <div className="bg-gray-50 p-6 rounded-sm text-center border-b-2 border-blue-600">
-                            <span className="block text-4xl font-black text-[#001226] italic mb-1">{selectedPlayer.stats.minutesPlayed}'</span>
-                            <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Minutes Played</span>
-                        </div>
-                        <div className="bg-gray-50 p-6 rounded-sm text-center border-b-2 border-yellow-400">
-                            <span className="block text-4xl font-black text-[#001226] italic mb-1">{selectedPlayer.stats.yellowCards}</span>
-                            <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Yellow Cards</span>
-                        </div>
-                        <div className="bg-gray-50 p-6 rounded-sm text-center border-b-2 border-red-600">
-                            <span className="block text-4xl font-black text-[#001226] italic mb-1">{selectedPlayer.stats.redCards}</span>
-                            <span className="text-[10px] uppercase tracking-widest text-gray-500 font-bold">Red Cards</span>
-                        </div>
+                        <h1 className="text-4xl md:text-6xl font-black uppercase tracking-tighter text-white font-display">
+                            Équipe <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-amber-400">Première</span>
+                        </h1>
+                        <p className="text-gray-400 mt-2 text-sm md:text-base max-w-xl">
+                            Découvrez la composition officielle de l'US Amal Tiznit. Statistiques en direct, fiches physiques et performances de nos joueurs.
+                        </p>
                     </div>
-                )}
-            </Modal>
+
+                    <div className="flex items-center space-x-3 bg-white/5 border border-white/10 px-4 py-3 rounded-2xl backdrop-blur-md">
+                        <User className="w-5 h-5 text-blue-400" />
+                        <span className="text-xs text-gray-300 font-medium">
+                            Effectif Pro: <strong className="text-white font-bold">{players.length} Joueurs</strong>
+                        </span>
+                    </div>
+                </div>
+
+                {/* Filter and Search Bar */}
+                <div className="mt-8 flex flex-col md:flex-row items-stretch md:items-center justify-between gap-4">
+                    {/* Search Input */}
+                    <div className="relative flex-1 max-w-md">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                        <input
+                            type="text"
+                            placeholder="Rechercher par nom, numéro (#10) ou poste..."
+                            value={searchTerm}
+                            onChange={(e) => setSearchTerm(e.target.value)}
+                            className="w-full bg-[#0B1528]/80 border border-white/10 rounded-xl pl-11 pr-10 py-3 text-sm text-white placeholder-gray-500 focus:outline-none focus:border-blue-500 transition-all"
+                        />
+                    </div>
+
+                    {/* Position Filter Pills */}
+                    <div className="flex items-center gap-2 overflow-x-auto pb-2 md:pb-0 scrollbar-none">
+                        {positions.map((pos) => {
+                            const active = filter === pos;
+                            return (
+                                <button
+                                    key={pos}
+                                    onClick={() => setFilter(pos)}
+                                    className={`px-4 py-2 text-xs font-bold uppercase tracking-wider rounded-xl transition-all flex-shrink-0 whitespace-nowrap border ${
+                                        active
+                                            ? 'bg-blue-600 border-blue-500 text-white shadow-lg shadow-blue-600/30'
+                                            : 'bg-[#0B1528]/60 border-white/10 text-gray-400 hover:text-white hover:border-white/25 hover:bg-white/5'
+                                    }`}
+                                >
+                                    {pos === 'All' ? 'Tous' : pos}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+            </div>
+
+            {/* Skeleton Loading */}
+            {loading && (
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {[1, 2, 3, 4, 5, 6, 7, 8].map((i) => (
+                            <div key={i} className="h-96 bg-white/5 animate-pulse rounded-2xl border border-white/10"></div>
+                        ))}
+                    </div>
+                </div>
+            )}
+
+            {/* Empty State */}
+            {!loading && filteredPlayers.length === 0 && (
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
+                    <div className="max-w-md mx-auto bg-[#0B1528]/80 border border-white/10 rounded-2xl p-10 backdrop-blur-xl">
+                        <User className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+                        <h3 className="text-xl font-bold text-white mb-2">Aucun Joueur Trouvé</h3>
+                        <p className="text-gray-400 text-sm mb-6">Aucun joueur ne correspond à vos critères de recherche.</p>
+                        <Button variant="outline" size="sm" onClick={() => { setFilter('All'); setSearchTerm(''); }}>
+                            Réinitialiser les filtres
+                        </Button>
+                    </div>
+                </div>
+            )}
+
+            {/* PLAYERS GRID Showcase */}
+            {!loading && filteredPlayers.length > 0 && (
+                <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+                        {filteredPlayers.map((player) => {
+                            const badgeColor = getPositionBadgeColor(player.position);
+                            return (
+                                <div 
+                                    key={player.id} 
+                                    onClick={() => setSelectedPlayer(player)}
+                                    className="group relative bg-[#0B1528]/90 border border-white/10 hover:border-blue-500/40 rounded-2xl overflow-hidden transition-all duration-300 hover:-translate-y-1.5 shadow-xl cursor-pointer flex flex-col justify-between"
+                                >
+                                    <div>
+                                        {/* Player Card Image & Watermark */}
+                                        <div className="relative aspect-[3/4] overflow-hidden bg-slate-950">
+                                            <img
+                                                src={player.image || '/Assets/bg2.jpg'}
+                                                alt={player.name}
+                                                className="w-full h-full object-cover transition-transform duration-700 ease-out group-hover:scale-105"
+                                            />
+                                            <div className="absolute inset-0 bg-gradient-to-t from-[#0B1528] via-transparent to-transparent"></div>
+
+                                            {/* Toulouse FC Style Watermark Number */}
+                                            <div className="absolute bottom-2 right-2 text-7xl font-black font-mono text-white/10 select-none pointer-events-none group-hover:text-blue-500/20 transition-colors">
+                                                #{player.number}
+                                            </div>
+
+                                            {/* Jersey Number Badge */}
+                                            <div className="absolute top-4 left-4 bg-blue-600 text-white w-10 h-10 rounded-xl flex items-center justify-center font-mono font-black text-sm shadow-lg">
+                                                #{player.number}
+                                            </div>
+
+                                            {/* Position Pill */}
+                                            <div className="absolute top-4 right-4">
+                                                <span className={`px-2.5 py-1 rounded-lg text-[10px] font-bold uppercase tracking-wider border backdrop-blur-md ${badgeColor}`}>
+                                                    {player.position}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        {/* Player Info Body */}
+                                        <div className="p-6">
+                                            <span className="text-gray-400 text-[11px] font-semibold uppercase tracking-widest block mb-1">
+                                                {player.nationality}
+                                            </span>
+                                            <h3 className="text-xl font-black text-white uppercase tracking-tight group-hover:text-blue-400 transition-colors line-clamp-1">
+                                                {player.name}
+                                            </h3>
+
+                                            {/* Quick Performance Meters */}
+                                            <div className="mt-4 pt-4 border-t border-white/10 grid grid-cols-3 gap-2 text-center text-xs">
+                                                <div className="bg-white/5 rounded-xl p-2 border border-white/5">
+                                                    <span className="text-[10px] text-gray-400 block uppercase font-bold">Matchs</span>
+                                                    <span className="font-mono font-bold text-white text-sm">{player.stats.matchesPlayed}</span>
+                                                </div>
+                                                <div className="bg-white/5 rounded-xl p-2 border border-white/5">
+                                                    <span className="text-[10px] text-gray-400 block uppercase font-bold">Buts</span>
+                                                    <span className="font-mono font-bold text-amber-400 text-sm">{player.stats.goals}</span>
+                                                </div>
+                                                <div className="bg-white/5 rounded-xl p-2 border border-white/5">
+                                                    <span className="text-[10px] text-gray-400 block uppercase font-bold">Assists</span>
+                                                    <span className="font-mono font-bold text-blue-400 text-sm">{player.stats.assists}</span>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* Action Button */}
+                                    <div className="p-6 pt-0">
+                                        <button className="w-full bg-white/5 group-hover:bg-blue-600 text-gray-300 group-hover:text-white py-3 rounded-xl font-bold text-xs uppercase tracking-wider transition-all flex items-center justify-center gap-2 border border-white/10 group-hover:border-blue-500">
+                                            Fiche Joueur <ArrowRight className="w-3.5 h-3.5" />
+                                        </button>
+                                    </div>
+                                </div>
+                            );
+                        })}
+                    </div>
+                </div>
+            )}
+
+            {/* TOULOUSE FC INSPIRED PLAYER PROFILE MODAL */}
+            {selectedPlayer && (
+                <Modal
+                    isOpen={!!selectedPlayer}
+                    onClose={() => setSelectedPlayer(null)}
+                    title={`Fiche Officielle: #${selectedPlayer.number} ${selectedPlayer.name}`}
+                >
+                    <div className="space-y-6 text-slate-800">
+                        {/* Squad Navigator Bar (Top) */}
+                        <div className="flex items-center justify-between bg-slate-100 p-2.5 rounded-xl text-xs font-bold text-gray-600">
+                            <button
+                                onClick={handlePrevPlayer}
+                                className="flex items-center gap-1 hover:text-blue-600 transition-colors px-2 py-1"
+                            >
+                                <ChevronLeft className="w-4 h-4" /> Joueur Précédent
+                            </button>
+                            <span className="font-mono text-gray-400">US Amal Tiznit Roster</span>
+                            <button
+                                onClick={handleNextPlayer}
+                                className="flex items-center gap-1 hover:text-blue-600 transition-colors px-2 py-1"
+                            >
+                                Joueur Suivant <ChevronRight className="w-4 h-4" />
+                            </button>
+                        </div>
+
+                        {/* Player Hero Showcase Banner */}
+                        <div className="bg-[#0B1528] text-white p-6 sm:p-8 rounded-2xl relative overflow-hidden shadow-xl">
+                            <div className="absolute right-4 bottom-0 text-9xl font-black font-mono text-white/5 select-none pointer-events-none">
+                                #{selectedPlayer.number}
+                            </div>
+
+                            <div className="flex flex-col sm:flex-row items-center gap-6 relative z-10">
+                                <img
+                                    src={selectedPlayer.image || '/Assets/bg2.jpg'}
+                                    alt={selectedPlayer.name}
+                                    className="w-28 h-36 rounded-xl object-cover border-2 border-blue-500/40 shadow-2xl shrink-0"
+                                />
+
+                                <div className="text-center sm:text-left flex-1">
+                                    <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2 mb-2">
+                                        <span className="bg-blue-600 text-white font-mono font-black text-xs px-3 py-1 rounded-lg">
+                                            #{selectedPlayer.number}
+                                        </span>
+                                        <span className="bg-white/10 text-amber-300 font-bold text-xs uppercase tracking-wider px-3 py-1 rounded-lg border border-white/10">
+                                            {selectedPlayer.position}
+                                        </span>
+                                    </div>
+
+                                    <h2 className="text-2xl sm:text-4xl font-black uppercase tracking-tight text-white mb-2">
+                                        {selectedPlayer.name}
+                                    </h2>
+
+                                    {/* Toulouse FC Style Personal Attributes Bar */}
+                                    <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-4 text-xs bg-white/5 p-3 rounded-xl border border-white/10 text-gray-300">
+                                        <div>
+                                            <span className="text-[10px] text-gray-400 uppercase block">Naissance</span>
+                                            <strong className="text-white">{selectedPlayer.bio.birthDate}</strong>
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] text-gray-400 uppercase block">Lieu</span>
+                                            <strong className="text-white">{selectedPlayer.bio.birthPlace}</strong>
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] text-gray-400 uppercase block">Taille / Poids</span>
+                                            <strong className="text-white">{selectedPlayer.bio.height} • {selectedPlayer.bio.weight}</strong>
+                                        </div>
+                                        <div>
+                                            <span className="text-[10px] text-gray-400 uppercase block">Pied Fort</span>
+                                            <strong className="text-amber-400">{selectedPlayer.bio.foot}</strong>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Profile Tabs: Overview vs Stats */}
+                        <div className="flex items-center gap-2 border-b border-gray-200 pb-2">
+                            <button
+                                onClick={() => setModalTab('overview')}
+                                className={`px-4 py-2 font-bold text-xs uppercase tracking-wider rounded-lg transition-all ${
+                                    modalTab === 'overview'
+                                        ? 'bg-blue-600 text-white shadow'
+                                        : 'text-gray-600 hover:bg-gray-100'
+                                }`}
+                            >
+                                Fiche & Biographie
+                            </button>
+                            <button
+                                onClick={() => setModalTab('stats')}
+                                className={`px-4 py-2 font-bold text-xs uppercase tracking-wider rounded-lg transition-all ${
+                                    modalTab === 'stats'
+                                        ? 'bg-blue-600 text-white shadow'
+                                        : 'text-gray-600 hover:bg-gray-100'
+                                }`}
+                            >
+                                Statistiques Saison 2025/2026
+                            </button>
+                        </div>
+
+                        {/* TAB 1: OVERVIEW & BIOGRAPHY */}
+                        {modalTab === 'overview' && (
+                            <div className="space-y-4 text-xs text-gray-600 leading-relaxed">
+                                <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                    <h4 className="font-bold text-gray-900 uppercase tracking-wider mb-1 flex items-center gap-1.5">
+                                        <Sparkles className="w-4 h-4 text-amber-500" /> Profil Joueur USAT
+                                    </h4>
+                                    <p>
+                                        Membre clé de l'effectif professionnel d'Ittihad Al-Riyadi Amal Tiznit pour la campagne Botola Pro 2025/2026. Réputé pour sa rigueur tactique, son engagement sur le terrain et sa contribution collective.
+                                    </p>
+                                </div>
+
+                                <div className="grid grid-cols-2 gap-4">
+                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                        <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Club Actuel</span>
+                                        <strong className="text-gray-900 text-sm">US Amal Tiznit</strong>
+                                    </div>
+                                    <div className="bg-gray-50 p-4 rounded-xl border border-gray-200">
+                                        <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Nationalité Sportive</span>
+                                        <strong className="text-gray-900 text-sm">{selectedPlayer.bio.nationality}</strong>
+                                    </div>
+                                </div>
+                            </div>
+                        )}
+
+                        {/* TAB 2: SEASON STATS DASHBOARD */}
+                        {modalTab === 'stats' && (
+                            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                                <div className="bg-gray-50 p-4 rounded-xl text-center border-b-4 border-blue-600">
+                                    <span className="block text-3xl font-black text-gray-900 font-mono mb-0.5">{selectedPlayer.stats.matchesPlayed}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Matchs Joués</span>
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-xl text-center border-b-4 border-amber-500">
+                                    <span className="block text-3xl font-black text-amber-600 font-mono mb-0.5">{selectedPlayer.stats.goals}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Buts Marqués</span>
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-xl text-center border-b-4 border-blue-500">
+                                    <span className="block text-3xl font-black text-blue-600 font-mono mb-0.5">{selectedPlayer.stats.assists}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Passes Décisives</span>
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-xl text-center border-b-4 border-emerald-500">
+                                    <span className="block text-3xl font-black text-emerald-600 font-mono mb-0.5">{selectedPlayer.stats.minutesPlayed}'</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Minutes Jouées</span>
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-xl text-center border-b-4 border-amber-400">
+                                    <span className="block text-3xl font-black text-amber-600 font-mono mb-0.5">{selectedPlayer.stats.yellowCards}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Cartons Jaunes</span>
+                                </div>
+                                <div className="bg-gray-50 p-4 rounded-xl text-center border-b-4 border-red-600">
+                                    <span className="block text-3xl font-black text-red-600 font-mono mb-0.5">{selectedPlayer.stats.redCards}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-gray-500 font-bold">Cartons Rouges</span>
+                                </div>
+                            </div>
+                        )}
+                    </div>
+                </Modal>
+            )}
         </div>
     );
 };

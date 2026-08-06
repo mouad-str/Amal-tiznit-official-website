@@ -9,6 +9,7 @@ import MatchCard from '../components/ui/MatchCard';
 import PlayerCard from '../components/ui/PlayerCard';
 import StatCard from '../components/ui/StatCard';
 import PartnersMarquee from '../components/ui/PartnersMarquee';
+import { ASSETS } from '../constants';
 
 export const Home: React.FC = () => {
   const navigate = useNavigate();
@@ -90,107 +91,85 @@ export const Home: React.FC = () => {
             <span className="block text-gradient-gold italic mt-1">AMAL TIZNIT</span>
           </h1>
 
-          <p className="usat-body-l text-[#94A3B8] max-w-2xl mx-auto mb-10">
-            Le site officiel du club passion de la ville de Tiznit. Retrouvez toute l'actualité, l'effectif, la billetterie et la boutique officielle.
+          <p className="usat-subtitle max-w-2xl mx-auto text-[#94A3B8] mb-10 text-sm sm:text-base">
+            Site Officiel de l'USAT. Suivez les matchs, découvrez l'effectif, réservez vos billets et soutenez le club emblématique de Tiznit.
           </p>
 
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-4 max-w-md mx-auto">
-            <Link to="/players" className="w-full sm:w-auto">
-              <Button variant="primary" size="lg" fullWidth className="sm:w-auto">
-                DÉCOUVRIR L'EFFECTIF
-              </Button>
-            </Link>
-            <Link to="/matches" className="w-full sm:w-auto">
-              <Button variant="outline" size="lg" fullWidth className="sm:w-auto">
-                CENTRE DE MATCH
-              </Button>
-            </Link>
+          <div className="flex flex-wrap items-center justify-center gap-4">
+            <Button
+              variant="primary"
+              size="lg"
+              onClick={() => navigate('/tickets')}
+              className="usat-glow"
+            >
+              RÉSERVER MES BILLETS
+            </Button>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => navigate('/matches')}
+            >
+              PROCHAINS MATCHS
+            </Button>
           </div>
         </div>
       </section>
 
       {/* ====================================================================
-          OFFICIAL PARTNERS & SPONSORS MARQUEE (BRIDGING HERO & NEXT MATCH)
-         ==================================================================== */}
-      <PartnersMarquee />
-
-      {/* ====================================================================
-         SECTION 1: NEXT MATCH / MATCH CENTER
-         ==================================================================== */}
-      <section className="py-20 sm:py-28 bg-[#0E182A] border-b border-[rgba(255,255,255,0.08)]">
-        <div className="usat-container">
-          <SectionHeader
-            overline="CENTRE DE MATCH"
-            title="Prochaines Échéances"
-            subtitle="Suivez le calendrier des matchs de l'USAT en Botola et Coupe du Trône."
-            actionText="TOUS LES MATCHS"
-            onActionClick={() => navigate('/matches')}
-          />
-
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-            <MatchCard
-              competition="BOTOLA PRO 2 — J24"
-              homeTeam={{ name: 'USAT TIZNIT', logoUrl: '/Assets/logo.png', isUsat: true }}
-              awayTeam={{ name: 'KAC MARRAKECH' }}
-              status="UPCOMING"
-              date="SAMEDI 08 AOÛT 2026"
-              time="18:00"
-              stadium="Stade El Massira, Tiznit"
-              ticketAvailable={true}
-              onCtaClick={() => navigate('/tickets')}
-            />
-
-            <MatchCard
-              competition="COUPE DU TRÔNE — 1/8"
-              homeTeam={{ name: 'USAT TIZNIT', logoUrl: '/Assets/logo.png', isUsat: true }}
-              awayTeam={{ name: 'HASSANIA AGADIR' }}
-              homeScore={2}
-              awayScore={1}
-              status="FINISHED"
-              date="25 JUILLET 2026"
-              stadium="Stade El Massira, Tiznit"
-              onCtaClick={() => navigate('/matches')}
-            />
-          </div>
-        </div>
-      </section>
-
-      {/* ====================================================================
-         TICKER SECTION
-         ==================================================================== */}
-      <div className="bg-[#001938] py-3.5 overflow-hidden border-y border-[rgba(255,255,255,0.08)]">
-        <div className="flex whitespace-nowrap animate-[ticker_30s_linear_infinite]">
-          {[1, 2, 3, 4].map((i) => (
-            <span key={i} className="text-xs font-display font-bold uppercase tracking-[0.3em] text-[#D4AF37] mx-8">
-              • PROCHAIN MATCH: AMAL TIZNIT vs KAC MARRAKECH • BILLETTERIE EN LIGNE DISPONIBLE • STADE EL MASSIRA TIZNIT • ACADÉMIE DE FOOTBALL USAT •
-            </span>
-          ))}
-        </div>
-      </div>
-
-      {/* ====================================================================
-         LATEST NEWS SECTION
+         SECTION 1: NEXT MATCH & NEWS GRID
          ==================================================================== */}
       <section className="py-20 sm:py-28 bg-[#040914]">
         <div className="usat-container">
           <SectionHeader
-            overline="ACTUALITÉS OFFICIELLES"
-            title="Dernières News USAT"
-            subtitle="Toutes les informations et coulisses de l'équipe première et du club."
-            actionText="ARCHIVES DE NEWS"
+            overline="CALENDRIER & ACTUALITÉS"
+            title="À la Une du Club"
+            subtitle="Ne manquez rien des derniers résultats et des déclarations officielles."
+            actionText="TOUTES LES NEWS"
             onActionClick={() => navigate('/news')}
           />
 
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            {/* Featured Highlight: Upcoming Match Card */}
+            {upcomingMatch ? (
+              <MatchCard
+                homeTeam={{ name: "Amal Tiznit", logoUrl: ASSETS.logo, isUsat: true }}
+                awayTeam={{ name: upcomingMatch.opponent }}
+                homeScore={upcomingMatch.home_score}
+                awayScore={upcomingMatch.away_score}
+                date={upcomingMatch.match_date}
+                time="16:00"
+                stadium={upcomingMatch.stadium}
+                status={upcomingMatch.status === 'finished' ? 'FINISHED' : 'UPCOMING'}
+                competition="Botola Pro 2"
+                onCtaClick={() => navigate('/tickets')}
+              />
+            ) : (
+              <div className="bg-[#0E182A] border border-[rgba(255,255,255,0.08)] rounded-[12px] p-8 flex flex-col justify-between">
+                <div>
+                  <Badge variant="accent" size="sm">COMMUNIQUÉ</Badge>
+                  <h3 className="font-display text-xl font-bold uppercase text-white mt-4">
+                    Prochain Match à Domicile
+                  </h3>
+                  <p className="text-xs text-[#94A3B8] mt-2 leading-relaxed">
+                    Stade El Massira Tiznit. Billetterie ouverte pour tous les supporters.
+                  </p>
+                </div>
+                <Button variant="primary" size="sm" onClick={() => navigate('/tickets')} className="mt-6 w-full">
+                  RÉSERVER
+                </Button>
+              </div>
+            )}
+
+            {/* News Articles Grid */}
             {latestNews.length > 0 ? (
               latestNews.map((article) => (
                 <NewsCard
                   key={article.id}
                   id={article.id}
-                  category={article.category || 'ÉQUIPE'}
+                  category={article.category || 'CLUB'}
                   title={article.title}
-                  date={new Date(article.published_at || Date.now()).toLocaleDateString('fr-FR', { day: '2-digit', month: 'short', year: 'numeric' })}
-                  imageUrl={article.image_url || '/Assets/bg1.jpg'}
+                  date={new Date(article.published_at).toLocaleDateString('fr-FR')}
+                  imageUrl={article.image_url}
                   summary={article.description}
                   onClick={() => navigate(`/news/${article.id}`)}
                 />
@@ -198,25 +177,17 @@ export const Home: React.FC = () => {
             ) : (
               <>
                 <NewsCard
-                  category="ÉQUIPE PREMIÈRE"
-                  title="L'USAT prépare activement le choc de la prochaine journée à Tiznit"
-                  date="03 AOÛT 2026"
+                  category="CHAMPIONNAT"
+                  title="Victoire Importante à Domicile"
+                  date="02 AOÛT 2026"
                   imageUrl="/Assets/bg1.jpg"
-                  summary="Entraînement tactique intensif et préparation physique complète sous la direction du staff."
-                  onClick={() => navigate('/news')}
-                />
-                <NewsCard
-                  category="ACADÉMIE"
-                  title="Les jeunes pépites de l'académie de Tiznit s'imposent en tournoi"
-                  date="01 AOÛT 2026"
-                  imageUrl="/Assets/bg2.jpg"
-                  summary="Une brillante victoire collective qui confirme l'excellence de la formation du club."
+                  summary="L'Amal Tiznit s'impose 2-0 dans une ambiance survoltée au Stade El Massira."
                   onClick={() => navigate('/news')}
                 />
                 <NewsCard
                   category="BILLETTERIE"
-                  title="Ouverture de la billetterie officielle pour le derby à domicile"
-                  date="28 JUILLET 2026"
+                  title="Ouverture de la Billetterie"
+                  date="01 AOÛT 2026"
                   imageUrl="/Assets/bg.jpg"
                   summary="Réservez vos places en ligne dès maintenant pour soutenir Amal Tiznit au stade."
                   onClick={() => navigate('/tickets')}
@@ -273,99 +244,52 @@ export const Home: React.FC = () => {
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             <StatCard value="18" label="MATCHS JOUÉS" sublabel="Botola Pro & Coupe du Trône" />
             <StatCard value="12" label="VICTOIRES" trend="+4 vs 2025" variant="gold" />
-            <StatCard value="28" label="BUTS MARQUÉS" sublabel="Moyenne 1.55 / match" />
-            <StatCard value="9" label="CLEAN SHEETS" sublabel="Matchs sans encaisser de but" />
+            <StatCard value="32" label="BUTS MARQUÉS" sublabel="Moyenne 1.77 / match" />
+            <StatCard value="8" label="CLEAN SHEETS" trend="Top 3 Défense" variant="gold" />
           </div>
         </div>
       </section>
 
       {/* ====================================================================
-         SECTION 6: USAT × TIZNIT HERITAGE & HISTORY
+         SECTION 4: PARTNERS & SPONSORS MARQUEE
          ==================================================================== */}
-      <section className="py-20 sm:py-28 bg-[#0E182A] border-y border-[rgba(255,255,255,0.08)] relative overflow-hidden">
-        <div className="usat-container relative z-10">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 items-center">
-            {/* Left Image Collage */}
-            <div className="lg:col-span-6 relative">
-              <div className="relative rounded-[12px] overflow-hidden border border-[rgba(212,175,55,0.3)] shadow-[0_12px_32px_rgba(0,0,0,0.6)]">
-                <img
-                  src="/Assets/bg.jpg"
-                  alt="USAT Tiznit Supporters & Stadium"
-                  className="w-full h-[400px] object-cover"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-[#040914] via-transparent to-transparent" />
-                <div className="absolute bottom-6 left-6 right-6">
-                  <Badge variant="accent" size="sm" className="mb-2">
-                    HISTOIRE & PATRIMOINE
-                  </Badge>
-                  <h3 className="usat-h2 text-white font-display uppercase">
-                    STADE EL MASSIRA • TIZNIT
-                  </h3>
-                </div>
-              </div>
-            </div>
-
-            {/* Right Story Text */}
-            <div className="lg:col-span-6 space-y-6">
-              <span className="usat-overline text-[#D4AF37]">L'ÂME DE LA VILLE D'ARGENT</span>
-              <h2 className="usat-display-m text-white">
-                UNE HISTOIRE DE PASSION & D'AMBITION À TIZNIT
-              </h2>
-              <p className="usat-body text-[#94A3B8]">
-                Fondé au cœur de la région Souss-Massa, l'Ittihad al-Riyadi Amal Tiznit incarne la fierté et l'esprit collectif de toute une ville. Plus qu'un club de football, l'USAT réunit des générations de supporters passionnés au Stade El Massira.
-              </p>
-              <div className="grid grid-cols-2 gap-4 pt-4 border-t border-[rgba(255,255,255,0.08)]">
-                <div>
-                  <span className="font-display text-2xl font-bold text-[#D4AF37]">75+ ANS</span>
-                  <p className="text-xs text-[#64748B] mt-1">D'Histoire Sportive</p>
-                </div>
-                <div>
-                  <span className="font-display text-2xl font-bold text-[#D4AF37]">100% PASSION</span>
-                  <p className="text-xs text-[#64748B] mt-1">Soutien Populaire</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </section>
+      <PartnersMarquee />
 
       {/* ====================================================================
-         SECTION 8: FAN CLUB & NEWSLETTER CTA
+         SECTION 5: NEWSLETTER & FAN CLUB CTA
          ==================================================================== */}
-      <section className="py-20 bg-[#0E182A] relative overflow-hidden">
+      <section className="py-20 bg-[#0E182A] border-t border-[rgba(255,255,255,0.08)]">
         <div className="usat-container">
-          <div className="max-w-3xl mx-auto rounded-[16px] bg-gradient-to-br from-[#002D62] to-[#040914] p-8 sm:p-12 border border-[rgba(212,175,55,0.3)] shadow-[0_12px_32px_rgba(0,0,0,0.6)] text-center space-y-6">
-            <Badge variant="accent" size="sm">
-              CLUB DES SUPPORTERS
-            </Badge>
+          <div className="bg-[#002D62] rounded-[16px] p-8 sm:p-14 text-center border border-[rgba(212,175,55,0.3)] shadow-[0_20px_50px_rgba(0,0,0,0.5)] relative overflow-hidden">
+            <div className="relative z-10 max-w-2xl mx-auto">
+              <span className="usat-overline text-[#D4AF37] block mb-2">CLUB DES SUPPORTERS</span>
+              <h2 className="usat-h2 text-white uppercase tracking-tight mb-4">
+                REJOIGNEZ LA NATION <span className="text-[#D4AF37]">BLEU ET ROUGE</span>
+              </h2>
+              <p className="text-sm text-[#94A3B8] mb-8 leading-relaxed">
+                Inscrivez-vous à la newsletter officielle pour recevoir en avant-première les alertes billetterie, les résumés vidéo et les offres exclusives boutique.
+              </p>
 
-            <h2 className="usat-display-m text-white">
-              REJOIGNEZ LA PASSION D'AMAL TIZNIT
-            </h2>
-
-            <p className="usat-body text-[#94A3B8] max-w-xl mx-auto">
-              Inscrivez-vous à la newsletter officielle pour recevoir en avant-première l'actualité des matchs, les alertes billetterie et les offres de la boutique.
-            </p>
-
-            {isSubscribed ? (
-              <div className="p-4 bg-[#10B981]/20 border border-[#10B981]/40 rounded-[8px] text-[#10B981] font-display text-sm font-bold uppercase">
-                ✓ MERCI ! VOTRE INSCRIPTION EST CONFIRMÉE.
-              </div>
-            ) : (
-              <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
-                <input
-                  type="email"
-                  required
-                  placeholder="Entrez votre adresse email"
-                  value={newsletterEmail}
-                  onChange={(e) => setNewsletterEmail(e.target.value)}
-                  className="flex-grow px-4 py-3 rounded-[8px] bg-[#040914] text-white border border-[rgba(255,255,255,0.15)] focus:outline-none focus:border-[#D4AF37] text-sm"
-                />
-                <Button type="submit" variant="secondary" size="md" className="shrink-0">
-                  S'INSCRIRE
-                </Button>
-              </form>
-            )}
+              {isSubscribed ? (
+                <div className="bg-[#10B981]/20 border border-[#10B981] text-[#10B981] p-4 rounded-[8px] font-display font-bold uppercase tracking-wider text-sm">
+                  ✓ MERCI ! VOUS ÊTES MAINTENANT INSCRIT À LA NEWSLETTER.
+                </div>
+              ) : (
+                <form onSubmit={handleNewsletterSubmit} className="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+                  <input
+                    type="email"
+                    required
+                    placeholder="Votre adresse email..."
+                    value={newsletterEmail}
+                    onChange={(e) => setNewsletterEmail(e.target.value)}
+                    className="flex-1 bg-[#0E182A] border border-[rgba(255,255,255,0.16)] rounded-[8px] px-4 py-3 text-sm text-white placeholder-[#64748B] focus:outline-none focus:border-[#D4AF37]"
+                  />
+                  <Button type="submit" variant="primary" size="md">
+                    S'INSCRIRE
+                  </Button>
+                </form>
+              )}
+            </div>
           </div>
         </div>
       </section>

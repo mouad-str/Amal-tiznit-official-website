@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, ShieldCheck, ArrowUpRight } from 'lucide-react';
+import { Facebook, Instagram, Twitter, Youtube, Mail, Phone, MapPin, ShieldCheck, ArrowUpRight, FileText, Lock } from 'lucide-react';
+import Modal from './Modal';
 
 export const Footer: React.FC = () => {
   const currentYear = new Date().getFullYear();
+  const [activeModal, setActiveModal] = useState<'legal' | 'privacy' | null>(null);
 
   const socialLinks = [
     { icon: Facebook, url: 'https://facebook.com', label: 'Facebook' },
@@ -83,7 +85,7 @@ export const Footer: React.FC = () => {
               </li>
               <li>
                 <Link to="/news" className="text-[#94A3B8] hover:text-white transition-colors duration-200">
-                  Actualités Officieuses
+                  Actualités Officielles
                 </Link>
               </li>
               <li>
@@ -182,18 +184,125 @@ export const Footer: React.FC = () => {
         <div className="pt-8 border-t border-[rgba(255,255,255,0.08)] flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-[#64748B]">
           <p>© {currentYear} Ittihad al-Riyadi Amal Tiznit (USAT). Tous droits réservés.</p>
           <div className="flex items-center gap-6 font-display uppercase tracking-wider text-[11px]">
-            <Link to="/contact" className="hover:text-white transition-colors">
+            <button
+              onClick={() => setActiveModal('legal')}
+              className="hover:text-[#D4AF37] transition-colors cursor-pointer font-bold tracking-wider uppercase text-left"
+            >
               Mentions Légales
-            </Link>
-            <Link to="/contact" className="hover:text-white transition-colors">
+            </button>
+            <button
+              onClick={() => setActiveModal('privacy')}
+              className="hover:text-[#D4AF37] transition-colors cursor-pointer font-bold tracking-wider uppercase text-left"
+            >
               Confidentialité
-            </Link>
-            <Link to="/contact" className="hover:text-white transition-colors">
+            </button>
+            <Link 
+              to="/contact" 
+              className="hover:text-[#D4AF37] transition-colors font-bold tracking-wider uppercase"
+            >
               Contact
             </Link>
           </div>
         </div>
       </div>
+
+      {/* MENTIONS LÉGALES MODAL */}
+      <Modal
+        isOpen={activeModal === 'legal'}
+        onClose={() => setActiveModal(null)}
+        title="Mentions Légales"
+      >
+        <div className="space-y-6 text-slate-800 text-sm leading-relaxed">
+          <div className="flex items-center gap-3 border-b border-gray-200 pb-3">
+            <FileText className="w-6 h-6 text-blue-600" />
+            <div>
+              <h4 className="font-bold text-gray-900 uppercase">Ittihad Al-Riyadi Amal Tiznit (USAT)</h4>
+              <p className="text-xs text-gray-500">Site Officiel du Club • Fondé en 1948</p>
+            </div>
+          </div>
+
+          <div>
+            <h5 className="font-bold text-gray-900 uppercase text-xs tracking-wider mb-1">1. Éditeur du Site</h5>
+            <p className="text-gray-600">
+              Le présent site web est édité par l'Association Sportive <strong>Ittihad Al-Riyadi Amal Tiznit (USAT)</strong>.<br />
+              <strong>Siège social :</strong> Stade El Massira, Boulevard Moulay Rachid, Tiznit 85000, Maroc.<br />
+              <strong>Contact :</strong> contact@amaltiznit.ma | +212 528 123 456
+            </p>
+          </div>
+
+          <div>
+            <h5 className="font-bold text-gray-900 uppercase text-xs tracking-wider mb-1">2. Directeur de la Publication</h5>
+            <p className="text-gray-600">
+              Le Directeur de la publication est le département de la Communication Officielle de l'US Amal Tiznit.
+            </p>
+          </div>
+
+          <div>
+            <h5 className="font-bold text-gray-900 uppercase text-xs tracking-wider mb-1">3. Propriété Intellectuelle</h5>
+            <p className="text-gray-600">
+              L'ensemble des contenus (logos, armoiries, textes, visuels, photographies et vidéos) présents sur ce site est la propriété exclusive de l'US Amal Tiznit. Toute reproduction totale ou partielle sans autorisation préalable écrite est strictement interdite.
+            </p>
+          </div>
+
+          <div>
+            <h5 className="font-bold text-gray-900 uppercase text-xs tracking-wider mb-1">4. Hébergement</h5>
+            <p className="text-gray-600">
+              Le site est hébergé sur des serveurs sécurisés garantissant une haute disponibilité et la protection des données des supporters.
+            </p>
+          </div>
+        </div>
+      </Modal>
+
+      {/* CONFIDENTIALITÉ MODAL */}
+      <Modal
+        isOpen={activeModal === 'privacy'}
+        onClose={() => setActiveModal(null)}
+        title="Politique de Confidentialité"
+      >
+        <div className="space-y-6 text-slate-800 text-sm leading-relaxed">
+          <div className="flex items-center gap-3 border-b border-gray-200 pb-3">
+            <Lock className="w-6 h-6 text-amber-600" />
+            <div>
+              <h4 className="font-bold text-gray-900 uppercase">Protection des Données Personnelles</h4>
+              <p className="text-xs text-gray-500">Conformité CNDP & Respect de la vie privée</p>
+            </div>
+          </div>
+
+          <div>
+            <h5 className="font-bold text-gray-900 uppercase text-xs tracking-wider mb-1">1. Collecte des Données</h5>
+            <p className="text-gray-600">
+              Nous collectons uniquement les informations personnelles strictement nécessaires lors des opérations suivantes :
+            </p>
+            <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-600 text-xs">
+              <li>Achat de billets en ligne pour les matchs à domicile</li>
+              <li>Commande de produits sur la boutique officielle</li>
+              <li>Envoi d'un message via le formulaire de contact</li>
+              <li>Inscription à la newsletter officielle</li>
+            </ul>
+          </div>
+
+          <div>
+            <h5 className="font-bold text-gray-900 uppercase text-xs tracking-wider mb-1">2. Utilisation des Informations</h5>
+            <p className="text-gray-600">
+              Vos données ne sont ni vendues, ni cédées à des tiers. Elles servent exclusivement à assurer la gestion de vos billets, le suivi de vos commandes et les réponses à vos demandes de support.
+            </p>
+          </div>
+
+          <div>
+            <h5 className="font-bold text-gray-900 uppercase text-xs tracking-wider mb-1">3. Sécurité des Paiements</h5>
+            <p className="text-gray-600">
+              Toutes les transactions bancaires effectuées pour la billetterie et la boutique sont sécurisées et cryptées SSL. Aucune donnée bancaire n'est conservée sur nos serveurs.
+            </p>
+          </div>
+
+          <div>
+            <h5 className="font-bold text-gray-900 uppercase text-xs tracking-wider mb-1">4. Vos Droits (Accès & Rectification)</h5>
+            <p className="text-gray-600">
+              Conformément à la réglementation relative à la protection des données personnelles, vous disposez d'un droit d'accès, de modification et de suppression de vos données. Pour l'exercer, contactez-nous à <strong>contact@amaltiznit.ma</strong>.
+            </p>
+          </div>
+        </div>
+      </Modal>
     </footer>
   );
 };

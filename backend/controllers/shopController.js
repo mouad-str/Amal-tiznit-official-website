@@ -33,12 +33,12 @@ const getProductById = async (req, res) => {
 // POST create new product
 const createProduct = async (req, res) => {
     try {
-        const { name, price, image_url, category, stock } = req.body;
+        const { name, description, price, image_url, category, stock, sizes } = req.body;
 
         const [result] = await pool.query(
-            `INSERT INTO products (name, price, image_url, category, stock)
-            VALUES (?, ?, ?, ?, ?)`,
-            [name, price, image_url, category, stock || 100]
+            `INSERT INTO products (name, description, price, image_url, category, stock, sizes)
+            VALUES (?, ?, ?, ?, ?, ?, ?)`,
+            [name, description || null, price, image_url, category, stock || 100, sizes || 'S,M,L,XL']
         );
 
         res.status(201).json({ id: result.insertId, message: 'Product created successfully' });
@@ -51,12 +51,12 @@ const createProduct = async (req, res) => {
 // PUT update product
 const updateProduct = async (req, res) => {
     try {
-        const { name, price, image_url, category, stock } = req.body;
+        const { name, description, price, image_url, category, stock, sizes } = req.body;
 
         const [result] = await pool.query(
-            `UPDATE products SET name = ?, price = ?, image_url = ?, category = ?, stock = ?
+            `UPDATE products SET name = ?, description = ?, price = ?, image_url = ?, category = ?, stock = ?, sizes = ?
             WHERE id = ?`,
-            [name, price, image_url, category, stock, req.params.id]
+            [name, description || null, price, image_url, category, stock, sizes || 'S,M,L,XL', req.params.id]
         );
 
         if (result.affectedRows === 0) {
