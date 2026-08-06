@@ -488,32 +488,35 @@ const Matches: React.FC = () => {
           onClose={() => setSelectedMatch(null)}
           title={`Match Report: vs ${selectedMatch.opponent}`}
         >
-          <div className="space-y-6 text-gray-200">
+          <div className="space-y-6 text-slate-700">
             {/* Score Banner */}
-            <div className="bg-[#0E182A] border border-white/10 text-white p-6 rounded-2xl text-center shadow-lg">
-              <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400 block mb-2">
+            <div className="bg-gradient-to-r from-[#002D62] to-[#001938] border border-blue-900 text-white p-6 rounded-2xl text-center shadow-lg relative overflow-hidden">
+              <div className="absolute right-0 top-0 translate-x-4 -translate-y-4 w-32 h-32 opacity-10 pointer-events-none">
+                <img src={ASSETS.logo} alt="" className="w-full h-full object-contain" />
+              </div>
+              <span className="text-[10px] font-bold uppercase tracking-widest text-[#D4AF37] block mb-2 font-display">
                 {formatDate(selectedMatch.match_date)} • {selectedMatch.stadium}
               </span>
-              <div className="flex items-center justify-center gap-8">
+              <div className="flex items-center justify-center gap-8 relative z-10">
                 <div>
-                  <img src={ASSETS.logo} alt="USAT" className="w-14 h-14 mx-auto mb-1 object-contain" />
-                  <p className="font-black text-xs uppercase">Amal Tiznit</p>
+                  <img src={ASSETS.logo} alt="USAT" className="w-14 h-14 mx-auto mb-1 object-contain drop-shadow" />
+                  <p className="font-black text-xs uppercase font-display tracking-wider">Amal Tiznit</p>
                 </div>
-                <div className="text-3xl font-black font-mono text-amber-400">
+                <div className="text-3xl font-black font-mono text-[#D4AF37]">
                   {selectedMatch.home_score ?? 0} - {selectedMatch.away_score ?? 0}
                 </div>
                 <div>
                   <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1 border border-white/10">
                     <Shield className="w-7 h-7 text-gray-300" />
                   </div>
-                  <p className="font-black text-xs uppercase">{selectedMatch.opponent}</p>
+                  <p className="font-black text-xs uppercase font-display tracking-wider">{selectedMatch.opponent}</p>
                 </div>
               </div>
             </div>
 
             {/* Match Stats */}
             <div>
-              <h4 className="font-bold text-white uppercase text-xs tracking-wider mb-3">Match Statistics</h4>
+              <h4 className="font-bold text-[#002D62] uppercase text-xs tracking-wider mb-3 font-display">Match Statistics</h4>
               <div className="space-y-3 text-xs font-semibold">
                 {[
                   { stat: 'Possession', usat: '56%', opp: '44%' },
@@ -521,10 +524,10 @@ const Matches: React.FC = () => {
                   { stat: 'Corners', usat: '6', opp: '3' },
                   { stat: 'Fouls', usat: '11', opp: '14' }
                 ].map((s, i) => (
-                  <div key={i} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/10">
-                    <span className="text-blue-400 font-bold">{s.usat}</span>
-                    <span className="text-gray-400 uppercase text-[11px] font-bold tracking-wider">{s.stat}</span>
-                    <span className="text-white font-bold">{s.opp}</span>
+                  <div key={i} className="flex items-center justify-between bg-white p-3 rounded-xl border border-slate-200/80 shadow-sm">
+                    <span className="text-[#002D62] font-bold font-mono text-sm">{s.usat}</span>
+                    <span className="text-slate-500 uppercase text-[11px] font-bold tracking-wider">{s.stat}</span>
+                    <span className="text-slate-800 font-bold font-mono text-sm">{s.opp}</span>
                   </div>
                 ))}
               </div>

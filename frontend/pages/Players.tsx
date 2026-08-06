@@ -401,13 +401,13 @@ const Players: React.FC = () => {
                         </div>
 
                         {/* Profile Tabs: Overview vs Stats */}
-                        <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+                        <div className="flex items-center gap-2 border-b border-slate-200 pb-2">
                             <button
                                 onClick={() => setModalTab('overview')}
                                 className={`px-4 py-2 font-bold text-xs uppercase tracking-wider rounded-lg transition-all ${
                                     modalTab === 'overview'
-                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                                        : 'text-gray-400 hover:bg-white/10 hover:text-white'
+                                        ? 'bg-[#002D62] text-white shadow-md'
+                                        : 'text-slate-600 hover:bg-slate-100'
                                 }`}
                             >
                                 Fiche & Biographie
@@ -416,8 +416,8 @@ const Players: React.FC = () => {
                                 onClick={() => setModalTab('stats')}
                                 className={`px-4 py-2 font-bold text-xs uppercase tracking-wider rounded-lg transition-all ${
                                     modalTab === 'stats'
-                                        ? 'bg-blue-600 text-white shadow-lg shadow-blue-600/30'
-                                        : 'text-gray-400 hover:bg-white/10 hover:text-white'
+                                        ? 'bg-[#002D62] text-white shadow-md'
+                                        : 'text-slate-600 hover:bg-slate-100'
                                 }`}
                             >
                                 Statistiques Saison 2025/2026
@@ -426,24 +426,24 @@ const Players: React.FC = () => {
 
                         {/* TAB 1: OVERVIEW & BIOGRAPHY */}
                         {modalTab === 'overview' && (
-                            <div className="space-y-4 text-xs text-gray-300 leading-relaxed">
-                                <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                                    <h4 className="font-bold text-white uppercase tracking-wider mb-1 flex items-center gap-1.5">
-                                        <Sparkles className="w-4 h-4 text-amber-500" /> Profil Joueur USAT
+                            <div className="space-y-4 text-xs text-slate-600 leading-relaxed">
+                                <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
+                                    <h4 className="font-bold text-[#002D62] uppercase tracking-wider mb-1 flex items-center gap-1.5 font-display">
+                                        <Sparkles className="w-4 h-4 text-[#D4AF37]" /> Profil Joueur USAT
                                     </h4>
-                                    <p className="text-gray-300">
+                                    <p className="text-slate-600">
                                         Membre clé de l'effectif professionnel d'Ittihad Al-Riyadi Amal Tiznit pour la campagne Botola Pro 2025/2026. Réputé pour sa rigueur tactique, son engagement sur le terrain et sa contribution collective.
                                     </p>
                                 </div>
 
                                 <div className="grid grid-cols-2 gap-4">
-                                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                                        <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Club Actuel</span>
-                                        <strong className="text-white text-sm">US Amal Tiznit</strong>
+                                    <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
+                                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Club Actuel</span>
+                                        <strong className="text-[#002D62] text-sm font-bold">US Amal Tiznit</strong>
                                     </div>
-                                    <div className="bg-white/5 p-4 rounded-xl border border-white/10">
-                                        <span className="text-[10px] uppercase font-bold text-gray-400 block mb-1">Nationalité Sportive</span>
-                                        <strong className="text-white text-sm">{selectedPlayer.bio.nationality}</strong>
+                                    <div className="bg-white p-4 rounded-xl border border-slate-200/80 shadow-sm">
+                                        <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Nationalité Sportive</span>
+                                        <strong className="text-slate-800 text-sm font-bold">{selectedPlayer.bio.nationality}</strong>
                                     </div>
                                 </div>
                             </div>
@@ -452,29 +452,29 @@ const Players: React.FC = () => {
                         {/* TAB 2: SEASON STATS DASHBOARD */}
                         {modalTab === 'stats' && (
                             <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                                <div className="bg-white/5 p-4 rounded-xl text-center border border-white/10 border-b-4 border-b-blue-600">
-                                    <span className="block text-3xl font-black text-white font-mono mb-0.5">{selectedPlayer.stats.matchesPlayed}</span>
-                                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Matchs Joués</span>
+                                <div className="bg-white p-4 rounded-xl text-center border border-slate-200/80 shadow-sm border-b-4 border-b-[#002D62]">
+                                    <span className="block text-3xl font-black text-[#002D62] font-mono mb-0.5">{selectedPlayer.stats.matchesPlayed}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Matchs Joués</span>
                                 </div>
-                                <div className="bg-white/5 p-4 rounded-xl text-center border border-white/10 border-b-4 border-b-amber-500">
-                                    <span className="block text-3xl font-black text-amber-400 font-mono mb-0.5">{selectedPlayer.stats.goals}</span>
-                                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Buts Marqués</span>
+                                <div className="bg-white p-4 rounded-xl text-center border border-slate-200/80 shadow-sm border-b-4 border-b-[#D4AF37]">
+                                    <span className="block text-3xl font-black text-amber-600 font-mono mb-0.5">{selectedPlayer.stats.goals}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Buts Marqués</span>
                                 </div>
-                                <div className="bg-white/5 p-4 rounded-xl text-center border border-white/10 border-b-4 border-b-blue-500">
-                                    <span className="block text-3xl font-black text-blue-400 font-mono mb-0.5">{selectedPlayer.stats.assists}</span>
-                                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Passes Décisives</span>
+                                <div className="bg-white p-4 rounded-xl text-center border border-slate-200/80 shadow-sm border-b-4 border-b-blue-500">
+                                    <span className="block text-3xl font-black text-blue-600 font-mono mb-0.5">{selectedPlayer.stats.assists}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Passes Décisives</span>
                                 </div>
-                                <div className="bg-white/5 p-4 rounded-xl text-center border border-white/10 border-b-4 border-b-emerald-500">
-                                    <span className="block text-3xl font-black text-emerald-400 font-mono mb-0.5">{selectedPlayer.stats.minutesPlayed}'</span>
-                                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Minutes Jouées</span>
+                                <div className="bg-white p-4 rounded-xl text-center border border-slate-200/80 shadow-sm border-b-4 border-b-emerald-500">
+                                    <span className="block text-3xl font-black text-emerald-600 font-mono mb-0.5">{selectedPlayer.stats.minutesPlayed}'</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Minutes Jouées</span>
                                 </div>
-                                <div className="bg-white/5 p-4 rounded-xl text-center border border-white/10 border-b-4 border-b-amber-400">
-                                    <span className="block text-3xl font-black text-amber-400 font-mono mb-0.5">{selectedPlayer.stats.yellowCards}</span>
-                                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Cartons Jaunes</span>
+                                <div className="bg-white p-4 rounded-xl text-center border border-slate-200/80 shadow-sm border-b-4 border-b-amber-400">
+                                    <span className="block text-3xl font-black text-amber-600 font-mono mb-0.5">{selectedPlayer.stats.yellowCards}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Cartons Jaunes</span>
                                 </div>
-                                <div className="bg-white/5 p-4 rounded-xl text-center border border-white/10 border-b-4 border-b-red-600">
-                                    <span className="block text-3xl font-black text-red-500 font-mono mb-0.5">{selectedPlayer.stats.redCards}</span>
-                                    <span className="text-[10px] uppercase tracking-wider text-gray-400 font-bold">Cartons Rouges</span>
+                                <div className="bg-white p-4 rounded-xl text-center border border-slate-200/80 shadow-sm border-b-4 border-b-red-600">
+                                    <span className="block text-3xl font-black text-red-600 font-mono mb-0.5">{selectedPlayer.stats.redCards}</span>
+                                    <span className="text-[10px] uppercase tracking-wider text-slate-500 font-bold">Cartons Rouges</span>
                                 </div>
                             </div>
                         )}

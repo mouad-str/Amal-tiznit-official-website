@@ -214,37 +214,48 @@ const ManageOrders: React.FC = () => {
             {/* Order Details Modal */}
             {selectedOrder && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedOrder(null)}></div>
-                    <div className="bg-[#0B1528] border border-white/15 rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 max-h-[90vh] overflow-y-auto text-white">
-                        <div className="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 bg-[#0E182A] z-10">
-                            <h2 className="text-xl font-black uppercase text-white font-display">Order #{selectedOrder.id}</h2>
+                    <div className="absolute inset-0 bg-slate-950/70 backdrop-blur-md" onClick={() => setSelectedOrder(null)}></div>
+                    <div className="bg-gradient-to-br from-slate-50 via-white to-blue-50/40 border border-slate-200/80 rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 max-h-[90vh] overflow-y-auto text-slate-700">
+                        {/* Top Gradient Bar */}
+                        <div className="h-1.5 w-full bg-gradient-to-r from-[#002D62] via-blue-600 to-[#D4AF37]" />
+
+                        {/* Watermark Logo */}
+                        <div className="absolute -right-10 -bottom-10 w-80 h-80 opacity-[0.06] pointer-events-none select-none z-0">
+                            <img src={ASSETS.logo} alt="" className="w-full h-full object-contain" />
+                        </div>
+
+                        <div className="p-6 border-b border-slate-200/70 flex justify-between items-center sticky top-0 bg-white/90 backdrop-blur-sm z-10">
+                            <div className="flex items-center gap-3">
+                                <img src={ASSETS.logo} alt="USAT" className="w-7 h-7 object-contain" />
+                                <h2 className="text-xl font-black uppercase text-[#002D62] font-display">Order #{selectedOrder.id}</h2>
+                            </div>
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => printReceipt(selectedOrder)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors shadow-lg shadow-blue-600/30"
+                                    className="flex items-center gap-2 px-4 py-2 bg-[#002D62] hover:bg-blue-900 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors shadow-md"
                                 >
                                     <Printer size={16} /> Imprimer
                                 </button>
-                                <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-red-400 p-1">
+                                <button onClick={() => setSelectedOrder(null)} className="text-slate-400 hover:text-red-600 p-1">
                                     <XCircle size={24} />
                                 </button>
                             </div>
                         </div>
 
-                        <div className="p-6 space-y-8">
+                        <div className="p-6 space-y-8 relative z-10">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
-                                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Customer Details</h3>
-                                    <div className="bg-white/5 border border-white/10 p-4 rounded-xl space-y-2 text-sm text-gray-300">
-                                        <p><span className="font-bold text-white">Name:</span> {selectedOrder.customer_name}</p>
-                                        <p><span className="font-bold text-white">Email:</span> {selectedOrder.customer_email}</p>
-                                        <p><span className="font-bold text-white">Phone:</span> {selectedOrder.customer_phone}</p>
-                                        <p><span className="font-bold text-white">Address:</span></p>
-                                        <p className="text-gray-400 pl-2 border-l-2 border-blue-500">{selectedOrder.customer_address}</p>
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 font-display">Customer Details</h3>
+                                    <div className="bg-white border border-slate-200/80 p-4 rounded-xl space-y-2 text-sm text-slate-600 shadow-sm">
+                                        <p><span className="font-bold text-[#002D62]">Name:</span> {selectedOrder.customer_name}</p>
+                                        <p><span className="font-bold text-[#002D62]">Email:</span> {selectedOrder.customer_email}</p>
+                                        <p><span className="font-bold text-[#002D62]">Phone:</span> {selectedOrder.customer_phone}</p>
+                                        <p><span className="font-bold text-[#002D62]">Address:</span></p>
+                                        <p className="text-slate-500 pl-2 border-l-2 border-blue-500">{selectedOrder.customer_address}</p>
                                     </div>
                                 </div>
                                 <div>
-                                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Order Status</h3>
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 font-display">Order Status</h3>
                                     <div className="space-y-4">
                                         {getStatusBadge(selectedOrder.status)}
                                         <div className="grid grid-cols-2 gap-2">
@@ -253,8 +264,8 @@ const ManageOrders: React.FC = () => {
                                                     key={status}
                                                     onClick={() => updateStatus(selectedOrder.id, status)}
                                                     className={`px-3 py-2 text-xs font-bold uppercase rounded-lg border transition-all ${selectedOrder.status === status
-                                                            ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-600/30'
-                                                            : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:text-white'
+                                                            ? 'bg-[#002D62] text-white border-[#002D62] shadow-md'
+                                                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
                                                         }`}
                                                 >
                                                     Mark {status}
@@ -266,10 +277,10 @@ const ManageOrders: React.FC = () => {
                             </div>
 
                             <div>
-                                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Items Ordered</h3>
-                                <div className="border border-white/10 rounded-xl overflow-hidden bg-white/5">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-slate-500 mb-3 font-display">Items Ordered</h3>
+                                <div className="border border-slate-200/80 rounded-xl overflow-hidden bg-white shadow-sm">
                                     <table className="w-full text-sm">
-                                        <thead className="bg-[#0E182A] text-xs text-gray-400 uppercase font-bold border-b border-white/10">
+                                        <thead className="bg-slate-100 text-xs text-[#002D62] uppercase font-bold border-b border-slate-200 font-display">
                                             <tr>
                                                 <th className="p-3 text-left">Product</th>
                                                 <th className="p-3 text-center">Qty</th>
@@ -277,20 +288,20 @@ const ManageOrders: React.FC = () => {
                                                 <th className="p-3 text-right">Total</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-white/5 text-gray-300">
+                                        <tbody className="divide-y divide-slate-100 text-slate-700">
                                             {selectedOrder.items?.map((item: any, i: number) => (
                                                 <tr key={i}>
-                                                    <td className="p-3 font-medium text-white">{item.product_name}</td>
+                                                    <td className="p-3 font-medium text-slate-900">{item.product_name}</td>
                                                     <td className="p-3 text-center font-mono">{item.quantity}</td>
-                                                    <td className="p-3 text-right text-gray-400 font-mono">{item.price_at_time} DH</td>
-                                                    <td className="p-3 text-right font-bold text-amber-400 font-mono">{item.price_at_time * item.quantity} DH</td>
+                                                    <td className="p-3 text-right text-slate-500 font-mono">{item.price_at_time} DH</td>
+                                                    <td className="p-3 text-right font-bold text-[#002D62] font-mono">{item.price_at_time * item.quantity} DH</td>
                                                 </tr>
                                             ))}
                                         </tbody>
-                                        <tfoot className="bg-[#0E182A] font-bold border-t border-white/10 text-white">
+                                        <tfoot className="bg-slate-50 font-bold border-t border-slate-200 text-slate-900">
                                             <tr>
-                                                <td colSpan={3} className="p-3 text-right">Grand Total</td>
-                                                <td className="p-3 text-right text-amber-400 font-mono font-black text-base">{selectedOrder.total_amount} DH</td>
+                                                <td colSpan={3} className="p-3 text-right font-display">Grand Total</td>
+                                                <td className="p-3 text-right text-blue-700 font-mono font-black text-base">{selectedOrder.total_amount} DH</td>
                                             </tr>
                                         </tfoot>
                                     </table>

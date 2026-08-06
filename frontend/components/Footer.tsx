@@ -212,41 +212,41 @@ export const Footer: React.FC = () => {
         onClose={() => setActiveModal(null)}
         title="Mentions Légales"
       >
-        <div className="space-y-6 text-gray-300 text-sm leading-relaxed">
-          <div className="flex items-center gap-3 border-b border-white/10 pb-3">
-            <FileText className="w-6 h-6 text-blue-400" />
+        <div className="space-y-6 text-slate-600 text-sm leading-relaxed">
+          <div className="flex items-center gap-3 border-b border-slate-200 pb-3">
+            <FileText className="w-6 h-6 text-[#002D62]" />
             <div>
-              <h4 className="font-bold text-white uppercase">Ittihad Al-Riyadi Amal Tiznit (USAT)</h4>
-              <p className="text-xs text-gray-400">Site Officiel du Club • Fondé en 1948</p>
+              <h4 className="font-bold text-[#002D62] uppercase font-display">Ittihad Al-Riyadi Amal Tiznit (USAT)</h4>
+              <p className="text-xs text-slate-500">Site Officiel du Club • Fondé en 1948</p>
             </div>
           </div>
 
           <div>
-            <h5 className="font-bold text-white uppercase text-xs tracking-wider mb-1">1. Éditeur du Site</h5>
-            <p className="text-gray-300">
-              Le présent site web est édité par l'Association Sportive <strong className="text-white">Ittihad Al-Riyadi Amal Tiznit (USAT)</strong>.<br />
-              <strong className="text-white">Siège social :</strong> Stade El Massira, Boulevard Moulay Rachid, Tiznit 85000, Maroc.<br />
-              <strong className="text-white">Contact :</strong> contact@amaltiznit.ma | +212 528 123 456
+            <h5 className="font-bold text-[#002D62] uppercase text-xs tracking-wider mb-1 font-display">1. Éditeur du Site</h5>
+            <p className="text-slate-600">
+              Le présent site web est édité par l'Association Sportive <strong className="text-slate-900">Ittihad Al-Riyadi Amal Tiznit (USAT)</strong>.<br />
+              <strong className="text-slate-900">Siège social :</strong> Stade El Massira, Boulevard Moulay Rachid, Tiznit 85000, Maroc.<br />
+              <strong className="text-slate-900">Contact :</strong> contact@amaltiznit.ma | +212 528 123 456
             </p>
           </div>
 
           <div>
-            <h5 className="font-bold text-white uppercase text-xs tracking-wider mb-1">2. Directeur de la Publication</h5>
-            <p className="text-gray-300">
+            <h5 className="font-bold text-[#002D62] uppercase text-xs tracking-wider mb-1 font-display">2. Directeur de la Publication</h5>
+            <p className="text-slate-600">
               Le Directeur de la publication est le département de la Communication Officielle de l'US Amal Tiznit.
             </p>
           </div>
 
           <div>
-            <h5 className="font-bold text-white uppercase text-xs tracking-wider mb-1">3. Propriété Intellectuelle</h5>
-            <p className="text-gray-300">
+            <h5 className="font-bold text-[#002D62] uppercase text-xs tracking-wider mb-1 font-display">3. Propriété Intellectuelle</h5>
+            <p className="text-slate-600">
               L'ensemble des contenus (logos, armoiries, textes, visuels, photographies et vidéos) présents sur ce site est la propriété exclusive de l'US Amal Tiznit. Toute reproduction totale ou partielle sans autorisation préalable écrite est strictement interdite.
             </p>
           </div>
 
           <div>
-            <h5 className="font-bold text-white uppercase text-xs tracking-wider mb-1">4. Hébergement</h5>
-            <p className="text-gray-300">
+            <h5 className="font-bold text-[#002D62] uppercase text-xs tracking-wider mb-1 font-display">4. Hébergement</h5>
+            <p className="text-slate-600">
               Le site est hébergé sur des serveurs sécurisés garantissant une haute disponibilité et la protection des données des supporters.
             </p>
           </div>
@@ -259,21 +259,21 @@ export const Footer: React.FC = () => {
         onClose={() => setActiveModal(null)}
         title="Politique de Confidentialité"
       >
-        <div className="space-y-6 text-gray-300 text-sm leading-relaxed">
-          <div className="flex items-center gap-3 border-b border-white/10 pb-3">
-            <Lock className="w-6 h-6 text-amber-400" />
+        <div className="space-y-6 text-slate-600 text-sm leading-relaxed">
+          <div className="flex items-center gap-3 border-b border-slate-200 pb-3">
+            <Lock className="w-6 h-6 text-[#D4AF37]" />
             <div>
-              <h4 className="font-bold text-white uppercase">Protection des Données Personnelles</h4>
-              <p className="text-xs text-gray-400">Conformité CNDP & Respect de la vie privée</p>
+              <h4 className="font-bold text-[#002D62] uppercase font-display">Protection des Données Personnelles</h4>
+              <p className="text-xs text-slate-500">Conformité CNDP & Respect de la vie privée</p>
             </div>
           </div>
 
           <div>
-            <h5 className="font-bold text-white uppercase text-xs tracking-wider mb-1">1. Collecte des Données</h5>
-            <p className="text-gray-300">
+            <h5 className="font-bold text-[#002D62] uppercase text-xs tracking-wider mb-1 font-display">1. Collecte des Données</h5>
+            <p className="text-slate-600">
               Nous collectons uniquement les informations personnelles strictement nécessaires lors des opérations suivantes :
             </p>
-            <ul className="list-disc pl-5 mt-1 space-y-1 text-gray-300 text-xs">
+            <ul className="list-disc pl-5 mt-1 space-y-1 text-slate-600 text-xs">
               <li>Achat de billets en ligne pour les matchs à domicile</li>
               <li>Commande de produits sur la boutique officielle</li>
               <li>Envoi d'un message via le formulaire de contact</li>
@@ -282,23 +282,23 @@ export const Footer: React.FC = () => {
           </div>
 
           <div>
-            <h5 className="font-bold text-white uppercase text-xs tracking-wider mb-1">2. Utilisation des Informations</h5>
-            <p className="text-gray-300">
+            <h5 className="font-bold text-[#002D62] uppercase text-xs tracking-wider mb-1 font-display">2. Utilisation des Informations</h5>
+            <p className="text-slate-600">
               Vos données ne sont ni vendues, ni cédées à des tiers. Elles servent exclusivement à assurer la gestion de vos billets, le suivi de vos commandes et les réponses à vos demandes de support.
             </p>
           </div>
 
           <div>
-            <h5 className="font-bold text-white uppercase text-xs tracking-wider mb-1">3. Sécurité des Paiements</h5>
-            <p className="text-gray-300">
+            <h5 className="font-bold text-[#002D62] uppercase text-xs tracking-wider mb-1 font-display">3. Sécurité des Paiements</h5>
+            <p className="text-slate-600">
               Toutes les transactions bancaires effectuées pour la billetterie et la boutique sont sécurisées et cryptées SSL. Aucune donnée bancaire n'est conservée sur nos serveurs.
             </p>
           </div>
 
           <div>
-            <h5 className="font-bold text-white uppercase text-xs tracking-wider mb-1">4. Vos Droits (Accès & Rectification)</h5>
-            <p className="text-gray-300">
-              Conformément à la réglementation relative à la protection des données personnelles, vous disposez d'un droit d'accès, de modification et de suppression de vos données. Pour l'exercer, contactez-nous à <strong className="text-amber-400">contact@amaltiznit.ma</strong>.
+            <h5 className="font-bold text-[#002D62] uppercase text-xs tracking-wider mb-1 font-display">4. Vos Droits (Accès & Rectification)</h5>
+            <p className="text-slate-600">
+              Conformément à la réglementation relative à la protection des données personnelles, vous disposez d'un droit d'accès, de modification et de suppression de vos données. Pour l'exercer, contactez-nous à <strong className="text-[#002D62]">contact@amaltiznit.ma</strong>.
             </p>
           </div>
         </div>
