@@ -132,12 +132,55 @@ const updateOrderStatus = async (req, res) => {
         res.json({ message: 'Order status updated' });
     } catch (error) {
         console.error('Error updating order:', error);
-        res.status(500).json({ error: 'Failed to update order' });
+// GET track single order (Customer Public)
+const trackOrder = async (req, res) => {
+    try {
+        const { orderId, phone } = req.query;
+
+        if (!orderId) {
+            return res.status(400).json({ error: 'Order ID is required' });
+        }
+
+        const cleanOrderId = String(orderId).replace(/\D/g, '');
+        if (!cleanOrderId) {
+            return res.status(400).json({ error: 'Invalid Order ID' });
+        }
+
+        const [rows] = await pool.query('SELECT * FROM orders WHERE id = ?', [cleanOrderId]);
+
+        if (rows.length === 0) {
+            return res.status(404).json({ error: 'Commande non trouvée' });
+        }
+
+        const order = rows[0];
+
+        // Optional phone verification
+        if (phone && !order.customer_phone.includes(phone.slice(-6))) {
+            return res.status(401).json({ error: 'Le numéro de téléphone ne correspond pas à cette commande' });
+        }
+
+        // Fetch items
+        const [items] = await pool.query(`
+            SELECT oi.*, p.name as product_name, p.image_url
+            FROM order_items oi
+            JOIN products p ON oi.product_id = p.id
+            WHERE oi.order_id = ?
+        `, [order.id]);
+
+        res.json({
+            ...order,
+            items
+        });
+
+    } catch (error) {
+        console.error('Error tracking order:', error);
+        res.status(500).json({ error: 'Failed to track order' });
     }
 };
 
 module.exports = {
     createOrder,
     getAllOrders,
-    updateOrderStatus
+    updateOrderStatus,
+    trackOrder
 };

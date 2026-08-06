@@ -92,6 +92,7 @@ export const API = {
             body: JSON.stringify({ status }),
             headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
         }),
+        track: (orderId: string, phone?: string) => apiFetch<any>(`/orders/track?orderId=${encodeURIComponent(orderId)}&phone=${encodeURIComponent(phone || '')}`),
     }
 };
 

@@ -15,6 +15,7 @@ import ShopDetails from './pages/ShopDetails';
 import CartPage from './pages/CartPage';
 import WishlistPage from './pages/WishlistPage';
 import CheckoutPage from './pages/CheckoutPage';
+import TrackOrderPage from './pages/TrackOrderPage';
 import ScrollToTop from './components/ScrollToTop';
 import SplashScreen from './components/SplashScreen';
 import AdminLayout from './components/AdminLayout';
@@ -63,6 +64,7 @@ const App: React.FC = () => {
             <Route path="/shop/cart" element={<MainLayout><CartPage /></MainLayout>} />
             <Route path="/shop/wishlist" element={<MainLayout><WishlistPage /></MainLayout>} />
             <Route path="/shop/checkout" element={<MainLayout><CheckoutPage /></MainLayout>} />
+            <Route path="/shop/track" element={<MainLayout><TrackOrderPage /></MainLayout>} />
             <Route path="/shop/:id" element={<MainLayout><ShopDetails /></MainLayout>} />
 
             {/* Admin Authentication */}
