@@ -214,18 +214,18 @@ const ManageOrders: React.FC = () => {
             {/* Order Details Modal */}
             {selectedOrder && (
                 <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-                    <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={() => setSelectedOrder(null)}></div>
-                    <div className="bg-white rounded-xl shadow-2xl w-full max-w-2xl relative z-10 max-h-[90vh] overflow-y-auto">
-                        <div className="p-6 border-b border-gray-100 flex justify-between items-center sticky top-0 bg-white">
-                            <h2 className="text-xl font-black uppercase italic text-[#001226]">Order #{selectedOrder.id}</h2>
+                    <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" onClick={() => setSelectedOrder(null)}></div>
+                    <div className="bg-[#0B1528] border border-white/15 rounded-2xl shadow-2xl w-full max-w-2xl relative z-10 max-h-[90vh] overflow-y-auto text-white">
+                        <div className="p-6 border-b border-white/10 flex justify-between items-center sticky top-0 bg-[#0E182A] z-10">
+                            <h2 className="text-xl font-black uppercase text-white font-display">Order #{selectedOrder.id}</h2>
                             <div className="flex items-center gap-2">
                                 <button
                                     onClick={() => printReceipt(selectedOrder)}
-                                    className="flex items-center gap-2 px-4 py-2 bg-[#001226] text-white text-xs font-bold uppercase tracking-wider rounded-lg hover:bg-blue-700 transition-colors"
+                                    className="flex items-center gap-2 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white text-xs font-bold uppercase tracking-wider rounded-lg transition-colors shadow-lg shadow-blue-600/30"
                                 >
                                     <Printer size={16} /> Imprimer
                                 </button>
-                                <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-red-500">
+                                <button onClick={() => setSelectedOrder(null)} className="text-gray-400 hover:text-red-400 p-1">
                                     <XCircle size={24} />
                                 </button>
                             </div>
@@ -234,17 +234,17 @@ const ManageOrders: React.FC = () => {
                         <div className="p-6 space-y-8">
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
                                 <div>
-                                    <h3 className="text-sm font-bold uppercase text-gray-500 mb-3">Customer Details</h3>
-                                    <div className="bg-gray-50 p-4 rounded-lg space-y-2 text-sm">
-                                        <p><span className="font-bold">Name:</span> {selectedOrder.customer_name}</p>
-                                        <p><span className="font-bold">Email:</span> {selectedOrder.customer_email}</p>
-                                        <p><span className="font-bold">Phone:</span> {selectedOrder.customer_phone}</p>
-                                        <p><span className="font-bold">Address:</span></p>
-                                        <p className="text-gray-500 pl-2 border-l-2 border-blue-200">{selectedOrder.customer_address}</p>
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Customer Details</h3>
+                                    <div className="bg-white/5 border border-white/10 p-4 rounded-xl space-y-2 text-sm text-gray-300">
+                                        <p><span className="font-bold text-white">Name:</span> {selectedOrder.customer_name}</p>
+                                        <p><span className="font-bold text-white">Email:</span> {selectedOrder.customer_email}</p>
+                                        <p><span className="font-bold text-white">Phone:</span> {selectedOrder.customer_phone}</p>
+                                        <p><span className="font-bold text-white">Address:</span></p>
+                                        <p className="text-gray-400 pl-2 border-l-2 border-blue-500">{selectedOrder.customer_address}</p>
                                     </div>
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-bold uppercase text-gray-500 mb-3">Order Status</h3>
+                                    <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Order Status</h3>
                                     <div className="space-y-4">
                                         {getStatusBadge(selectedOrder.status)}
                                         <div className="grid grid-cols-2 gap-2">
@@ -252,9 +252,9 @@ const ManageOrders: React.FC = () => {
                                                 <button
                                                     key={status}
                                                     onClick={() => updateStatus(selectedOrder.id, status)}
-                                                    className={`px-3 py-2 text-xs font-bold uppercase rounded border transition-all ${selectedOrder.status === status
-                                                            ? 'bg-blue-600 text-white border-blue-600'
-                                                            : 'border-gray-200 text-gray-500 hover:border-blue-300 hover:text-blue-600'
+                                                    className={`px-3 py-2 text-xs font-bold uppercase rounded-lg border transition-all ${selectedOrder.status === status
+                                                            ? 'bg-blue-600 text-white border-blue-500 shadow-md shadow-blue-600/30'
+                                                            : 'border-white/10 bg-white/5 text-gray-400 hover:border-white/20 hover:text-white'
                                                         }`}
                                                 >
                                                     Mark {status}
@@ -266,10 +266,10 @@ const ManageOrders: React.FC = () => {
                             </div>
 
                             <div>
-                                <h3 className="text-sm font-bold uppercase text-gray-500 mb-3">Items Ordered</h3>
-                                <div className="border rounded-lg overflow-hidden">
+                                <h3 className="text-xs font-bold uppercase tracking-wider text-gray-400 mb-3">Items Ordered</h3>
+                                <div className="border border-white/10 rounded-xl overflow-hidden bg-white/5">
                                     <table className="w-full text-sm">
-                                        <thead className="bg-gray-50 text-xs text-gray-500 uppercase font-bold">
+                                        <thead className="bg-[#0E182A] text-xs text-gray-400 uppercase font-bold border-b border-white/10">
                                             <tr>
                                                 <th className="p-3 text-left">Product</th>
                                                 <th className="p-3 text-center">Qty</th>
@@ -277,20 +277,20 @@ const ManageOrders: React.FC = () => {
                                                 <th className="p-3 text-right">Total</th>
                                             </tr>
                                         </thead>
-                                        <tbody className="divide-y divide-gray-100">
+                                        <tbody className="divide-y divide-white/5 text-gray-300">
                                             {selectedOrder.items?.map((item: any, i: number) => (
                                                 <tr key={i}>
-                                                    <td className="p-3 font-medium">{item.product_name}</td>
-                                                    <td className="p-3 text-center">{item.quantity}</td>
-                                                    <td className="p-3 text-right text-gray-500">{item.price_at_time}</td>
-                                                    <td className="p-3 text-right font-bold">{item.price_at_time * item.quantity}</td>
+                                                    <td className="p-3 font-medium text-white">{item.product_name}</td>
+                                                    <td className="p-3 text-center font-mono">{item.quantity}</td>
+                                                    <td className="p-3 text-right text-gray-400 font-mono">{item.price_at_time} DH</td>
+                                                    <td className="p-3 text-right font-bold text-amber-400 font-mono">{item.price_at_time * item.quantity} DH</td>
                                                 </tr>
                                             ))}
                                         </tbody>
-                                        <tfoot className="bg-gray-50 font-bold">
+                                        <tfoot className="bg-[#0E182A] font-bold border-t border-white/10 text-white">
                                             <tr>
                                                 <td colSpan={3} className="p-3 text-right">Grand Total</td>
-                                                <td className="p-3 text-right text-blue-600">{selectedOrder.total_amount} DH</td>
+                                                <td className="p-3 text-right text-amber-400 font-mono font-black text-base">{selectedOrder.total_amount} DH</td>
                                             </tr>
                                         </tfoot>
                                     </table>

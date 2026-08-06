@@ -488,9 +488,9 @@ const Matches: React.FC = () => {
           onClose={() => setSelectedMatch(null)}
           title={`Match Report: vs ${selectedMatch.opponent}`}
         >
-          <div className="space-y-6 text-slate-800">
+          <div className="space-y-6 text-gray-200">
             {/* Score Banner */}
-            <div className="bg-[#0B1528] text-white p-6 rounded-2xl text-center">
+            <div className="bg-[#0E182A] border border-white/10 text-white p-6 rounded-2xl text-center shadow-lg">
               <span className="text-[10px] font-bold uppercase tracking-widest text-blue-400 block mb-2">
                 {formatDate(selectedMatch.match_date)} • {selectedMatch.stadium}
               </span>
@@ -503,7 +503,7 @@ const Matches: React.FC = () => {
                   {selectedMatch.home_score ?? 0} - {selectedMatch.away_score ?? 0}
                 </div>
                 <div>
-                  <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1">
+                  <div className="w-14 h-14 bg-white/10 rounded-full flex items-center justify-center mx-auto mb-1 border border-white/10">
                     <Shield className="w-7 h-7 text-gray-300" />
                   </div>
                   <p className="font-black text-xs uppercase">{selectedMatch.opponent}</p>
@@ -513,7 +513,7 @@ const Matches: React.FC = () => {
 
             {/* Match Stats */}
             <div>
-              <h4 className="font-bold text-gray-900 uppercase text-xs tracking-wider mb-3">Match Statistics</h4>
+              <h4 className="font-bold text-white uppercase text-xs tracking-wider mb-3">Match Statistics</h4>
               <div className="space-y-3 text-xs font-semibold">
                 {[
                   { stat: 'Possession', usat: '56%', opp: '44%' },
@@ -521,10 +521,10 @@ const Matches: React.FC = () => {
                   { stat: 'Corners', usat: '6', opp: '3' },
                   { stat: 'Fouls', usat: '11', opp: '14' }
                 ].map((s, i) => (
-                  <div key={i} className="flex items-center justify-between bg-gray-50 p-2.5 rounded-lg border border-gray-100">
-                    <span className="text-blue-600 font-bold">{s.usat}</span>
-                    <span className="text-gray-500 uppercase">{s.stat}</span>
-                    <span className="text-gray-700 font-bold">{s.opp}</span>
+                  <div key={i} className="flex items-center justify-between bg-white/5 p-3 rounded-xl border border-white/10">
+                    <span className="text-blue-400 font-bold">{s.usat}</span>
+                    <span className="text-gray-400 uppercase text-[11px] font-bold tracking-wider">{s.stat}</span>
+                    <span className="text-white font-bold">{s.opp}</span>
                   </div>
                 ))}
               </div>

@@ -34,22 +34,24 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title }) => {
             />
 
             {/* Content */}
-            <div className={`relative bg-white w-full max-w-2xl rounded-sm overflow-hidden shadow-2xl transform transition-all duration-300 ${isOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}>
+            <div className={`relative bg-[#0B1528] border border-white/15 w-full max-w-2xl rounded-2xl overflow-hidden shadow-2xl transform transition-all duration-300 ${isOpen ? 'scale-100 translate-y-0' : 'scale-95 translate-y-4'}`}>
                 {/* Header */}
-                <div className="flex items-center justify-between p-6 border-b border-gray-100 bg-gray-50">
-                    <h3 className="text-xl font-black uppercase tracking-tighter text-[#001226] italic">
-                        {title}
-                    </h3>
-                    <button
-                        onClick={onClose}
-                        className="p-2 hover:bg-gray-200 rounded-full transition-colors group"
-                    >
-                        <X className="w-5 h-5 text-gray-500 group-hover:text-red-500" />
-                    </button>
-                </div>
+                {title && (
+                    <div className="flex items-center justify-between p-6 border-b border-white/10 bg-[#0E182A]">
+                        <h3 className="text-xl font-black uppercase tracking-tight text-white font-display">
+                            {title}
+                        </h3>
+                        <button
+                            onClick={onClose}
+                            className="p-2 hover:bg-white/10 rounded-full transition-colors text-gray-400 hover:text-white group"
+                        >
+                            <X className="w-5 h-5 group-hover:text-red-400" />
+                        </button>
+                    </div>
+                )}
 
                 {/* Body */}
-                <div className="p-6 max-h-[80vh] overflow-y-auto">
+                <div className="p-6 max-h-[80vh] overflow-y-auto text-gray-200">
                     {children}
                 </div>
             </div>

@@ -95,10 +95,10 @@ const NotificationDropdown: React.FC = () => {
             </button>
 
             {isOpen && (
-                <div className="absolute right-0 mt-2 w-80 bg-white rounded-xl shadow-2xl border border-gray-100 overflow-hidden z-50 animate-slide-up origin-top-right">
-                    <div className="p-4 border-b border-gray-50 flex justify-between items-center bg-gray-50">
-                        <h3 className="font-black text-[#001226] uppercase text-xs tracking-widest">Notifications</h3>
-                        <span className="bg-blue-100 text-blue-700 text-[10px] font-bold px-2 py-0.5 rounded-full">{unreadCount} New</span>
+                <div className="absolute right-0 mt-2 w-80 bg-[#0B1528] rounded-2xl shadow-2xl border border-white/15 overflow-hidden z-50 animate-slide-up origin-top-right">
+                    <div className="p-4 border-b border-white/10 flex justify-between items-center bg-[#0E182A]">
+                        <h3 className="font-black text-white uppercase text-xs tracking-widest font-display">Notifications</h3>
+                        <span className="bg-blue-600/30 border border-blue-500/40 text-blue-300 text-[10px] font-bold px-2 py-0.5 rounded-full">{unreadCount} New</span>
                     </div>
 
                     <div className="max-h-96 overflow-y-auto">
@@ -110,22 +110,22 @@ const NotificationDropdown: React.FC = () => {
                                 <p className="text-xs mt-2">No new notifications</p>
                             </div>
                         ) : (
-                            <div className="divide-y divide-gray-50">
+                            <div className="divide-y divide-white/5">
                                 {notifications.map(item => (
                                     <Link
                                         key={item.id}
                                         to={item.link}
                                         onClick={() => setIsOpen(false)}
-                                        className="block p-4 hover:bg-blue-50 transition-colors group"
+                                        className="block p-4 hover:bg-white/5 transition-colors group"
                                     >
                                         <div className="flex gap-3">
-                                            <div className={`mt-1 p-1.5 rounded-full h-fit ${item.type === 'order' ? 'bg-green-100 text-green-600' : 'bg-purple-100 text-purple-600'}`}>
+                                            <div className={`mt-1 p-1.5 rounded-full h-fit ${item.type === 'order' ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/30' : 'bg-purple-500/20 text-purple-400 border border-purple-500/30'}`}>
                                                 {item.type === 'order' ? <Icons.ShoppingBag /> : <Icons.Mail />}
                                             </div>
                                             <div>
-                                                <h4 className="text-xs font-bold text-[#001226] group-hover:text-blue-600 transition-colors">{item.title}</h4>
-                                                <p className="text-[10px] text-gray-500 mt-0.5 line-clamp-1">{item.subtitle}</p>
-                                                <span className="text-[9px] text-gray-300 font-bold uppercase mt-1 block">{item.time}</span>
+                                                <h4 className="text-xs font-bold text-white group-hover:text-blue-400 transition-colors">{item.title}</h4>
+                                                <p className="text-[10px] text-gray-400 mt-0.5 line-clamp-1">{item.subtitle}</p>
+                                                <span className="text-[9px] text-gray-500 font-bold uppercase mt-1 block">{item.time}</span>
                                             </div>
                                         </div>
                                     </Link>
@@ -134,8 +134,8 @@ const NotificationDropdown: React.FC = () => {
                         )}
                     </div>
 
-                    <div className="p-2 bg-gray-50 border-t border-gray-100 text-center">
-                        <Link to="/admin/dashboard" onClick={() => setIsOpen(false)} className="text-[10px] font-bold text-blue-600 uppercase hover:underline">
+                    <div className="p-3 bg-[#0E182A] border-t border-white/10 text-center">
+                        <Link to="/admin/dashboard" onClick={() => setIsOpen(false)} className="text-[10px] font-bold text-blue-400 uppercase hover:text-white transition-colors">
                             View All Activity
                         </Link>
                     </div>
