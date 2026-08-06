@@ -12,16 +12,16 @@
  */
 
 const mysql = require('mysql2/promise');
-const path  = require('path');
+const path = require('path');
 require('dotenv').config({ path: path.resolve(__dirname, '../backend/.env') });
 
 async function migrate() {
     const connection = await mysql.createConnection({
-        host    : process.env.DB_HOST     || 'localhost',
-        port    : process.env.DB_PORT     || 3306,
-        user    : process.env.DB_USER     || 'root',
+        host: process.env.DB_HOST || 'localhost',
+        port: process.env.DB_PORT || 3306,
+        user: process.env.DB_USER || 'root',
         password: process.env.DB_PASSWORD || '',
-        database: process.env.DB_NAME     || 'amal_tiznit_db',
+        database: process.env.DB_NAME || 'amal_tiznit_db',
     });
 
     console.log('🔄 Running migrations…');

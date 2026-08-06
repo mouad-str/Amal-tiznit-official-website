@@ -2,10 +2,10 @@ const { pool } = require('../config/db');
 
 /**
  * Orders Controller
- * Handles order placement and management
+ * Handles order creation, fetching, updating status, and tracking
  */
 
-// POST create new order
+// POST Create Order (Public Checkout)
 const createOrder = async (req, res) => {
     const connection = await pool.getConnection();
     try {
@@ -13,30 +13,39 @@ const createOrder = async (req, res) => {
 
         const { customer_name, customer_email, customer_phone, customer_address, items } = req.body;
 
-        if (!items || items.length === 0) {
-            throw new Error('No items in order');
+        if (!customer_name || !customer_email || !customer_phone || !customer_address || !items || !items.length) {
+            await connection.rollback();
+            return res.status(400).json({ error: 'Missing required order fields' });
         }
 
-        // 1. Calculate Total & Verify Stock
-        let totalAmount = 0;
+        // 1. Calculate item totals server-side and verify stock
+        let calculatedTotal = 0;
         const processedItems = [];
 
         for (const item of items) {
-            const [rows] = await connection.query('SELECT price, stock FROM products WHERE id = ?', [item.product_id]);
-            if (rows.length === 0) {
-                throw new Error(`Product ${item.product_id} not found`);
-            }
-            const product = rows[0];
+            const [productRows] = await connection.query(
+                'SELECT id, price, stock FROM products WHERE id = ? FOR UPDATE',
+                [item.product_id]
+            );
 
+            if (productRows.length === 0) {
+                await connection.rollback();
+                return res.status(400).json({ error: `Produit ID ${item.product_id} non trouvé` });
+            }
+
+            const product = productRows[0];
             if (product.stock < item.quantity) {
-                throw new Error(`Insufficient stock for product ID ${item.product_id}`);
+                await connection.rollback();
+                return res.status(400).json({ error: `Stock insuffisant pour l'article ID ${item.product_id}` });
             }
 
+            // Base price + optional flocage (+40 DH) + patch (+25 DH)
             let itemPrice = Number(product.price);
             if (item.flocage) itemPrice += 40;
             if (item.has_patch) itemPrice += 25;
 
-            totalAmount += itemPrice * item.quantity;
+            calculatedTotal += itemPrice * item.quantity;
+
             processedItems.push({
                 product_id: item.product_id,
                 quantity: item.quantity,
@@ -45,38 +54,32 @@ const createOrder = async (req, res) => {
                 flocage: item.flocage || null,
                 has_patch: item.has_patch ? 1 : 0
             });
-        }
 
-        // 2. Create Order
-        const [orderResult] = await connection.query(
-            `INSERT INTO orders (customer_name, customer_email, customer_phone, customer_address, total, status)
-             VALUES (?, ?, ?, ?, ?, 'pending')`,
-            [customer_name, customer_email, customer_phone, customer_address, totalAmount]
-        );
-        const orderId = orderResult.insertId;
-
-        // 3. Create Order Items & Update Stock
-        for (const item of processedItems) {
-            await connection.query(
-                `INSERT INTO order_items (order_id, product_id, quantity, price, size, flocage, has_patch)
-                 VALUES (?, ?, ?, ?, ?, ?, ?)`,
-                [orderId, item.product_id, item.quantity, item.price, item.size, item.flocage, item.has_patch]
-            );
-
+            // Decrement product stock
             await connection.query(
                 'UPDATE products SET stock = stock - ? WHERE id = ?',
                 [item.quantity, item.product_id]
             );
         }
 
-        await connection.commit();
+        // 2. Insert main order row
+        const [orderResult] = await connection.query(
+            'INSERT INTO orders (customer_name, customer_email, customer_phone, customer_address, total, status) VALUES (?, ?, ?, ?, ?, ?)',
+            [customer_name, customer_email, customer_phone, customer_address, calculatedTotal, 'pending']
+        );
 
-        res.status(201).json({
-            success: true,
-            message: 'Order placed successfully',
-            orderId: orderId,
-            total: totalAmount
-        });
+        const orderId = orderResult.insertId;
+
+        // 3. Insert order items
+        for (const item of processedItems) {
+            await connection.query(
+                'INSERT INTO order_items (order_id, product_id, quantity, price, size, flocage, has_patch) VALUES (?, ?, ?, ?, ?, ?, ?)',
+                [orderId, item.product_id, item.quantity, item.price, item.size, item.flocage, item.has_patch]
+            );
+        }
+
+        await connection.commit();
+        res.status(201).json({ success: true, orderId, total: calculatedTotal });
 
     } catch (error) {
         await connection.rollback();
@@ -92,15 +95,12 @@ const getAllOrders = async (req, res) => {
     try {
         const [orders] = await pool.query('SELECT * FROM orders ORDER BY created_at DESC');
 
-        // Fetch items for each order
-        // Note: For large datasets this N+1 approach isn't ideal, but fine for now
         const [items] = await pool.query(`
             SELECT oi.*, p.name as product_name 
             FROM order_items oi
             JOIN products p ON oi.product_id = p.id
         `);
 
-        // Attach items to orders
         const ordersWithItems = orders.map(order => ({
             ...order,
             items: items.filter(item => item.order_id === order.id)
@@ -158,12 +158,10 @@ const trackOrder = async (req, res) => {
 
         const order = rows[0];
 
-        // Optional phone verification
         if (phone && !order.customer_phone.includes(phone.slice(-6))) {
             return res.status(401).json({ error: 'Le numéro de téléphone ne correspond pas à cette commande' });
         }
 
-        // Fetch items
         const [items] = await pool.query(`
             SELECT oi.*, p.name as product_name, p.image_url
             FROM order_items oi

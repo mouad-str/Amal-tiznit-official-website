@@ -1,18 +1,18 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { 
-    ShoppingBag, 
-    Heart, 
-    Truck, 
-    ShieldCheck, 
-    Sparkles, 
-    ArrowLeft, 
-    Check, 
-    Shirt, 
-    ChevronRight, 
-    Star, 
-    RotateCcw, 
-    Share2, 
+import {
+    ShoppingBag,
+    Heart,
+    Truck,
+    ShieldCheck,
+    Sparkles,
+    ArrowLeft,
+    Check,
+    Shirt,
+    ChevronRight,
+    Star,
+    RotateCcw,
+    Share2,
     CheckCircle2,
     X,
     Plus,
@@ -118,7 +118,7 @@ const ShopDetails: React.FC = () => {
                     document.title = `${found.name} | Boutique Officielle USAT`;
                     const sizes = (found.sizes || 'S,M,L,XL,XXL').split(',').map(s => s.trim());
                     setSelectedSize(sizes.includes('M') ? 'M' : sizes[0]);
-                    
+
                     // Related items
                     const related = allProducts.filter(p => p.id !== found.id).slice(0, 4);
                     setRelatedProducts(related);
@@ -171,7 +171,7 @@ const ShopDetails: React.FC = () => {
         setCart(prev => {
             const key = `${product.id}-${selectedSize}-${fName || ''}-${fNum || ''}-${addPatch ? 'P' : 'N'}`;
             const existing = prev.find(i => `${i.productId}-${i.size}-${i.flocageName || ''}-${i.flocageNumber || ''}-${i.hasPatch ? 'P' : 'N'}` === key);
-            
+
             if (existing) {
                 return prev.map(i => `${i.productId}-${i.size}-${i.flocageName || ''}-${i.flocageNumber || ''}-${i.hasPatch ? 'P' : 'N'}` === key
                     ? { ...i, quantity: i.quantity + 1 }
@@ -246,8 +246,8 @@ const ShopDetails: React.FC = () => {
                 customer_email: checkoutForm.email,
                 customer_phone: checkoutForm.phone,
                 customer_address: checkoutForm.address,
-                items: cart.map(i => ({ 
-                    product_id: i.productId, 
+                items: cart.map(i => ({
+                    product_id: i.productId,
                     quantity: i.quantity,
                     size: i.size,
                     flocage: i.flocageName ? `${i.flocageName} #${i.flocageNumber}` : null
@@ -281,7 +281,7 @@ const ShopDetails: React.FC = () => {
 
     return (
         <div className="min-h-screen bg-transparent pt-24 pb-24 text-white">
-            
+
             {/* ── Toast Banner ──────────────────── */}
             {toastMessage && (
                 <div className="fixed top-24 right-6 z-50 bg-[#002D62] text-white border border-[#D4AF37]/50 px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-3 animate-slide-up">
@@ -304,7 +304,7 @@ const ShopDetails: React.FC = () => {
             {/* ── Main Product Detail Grid ────── */}
             <div className="container mx-auto px-4 sm:px-6 lg:px-8">
                 <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 bg-[#0B1528]/90 border border-white/10 rounded-3xl p-6 sm:p-10 backdrop-blur-xl shadow-2xl relative overflow-hidden">
-                    
+
                     {/* Watermark Logo Backdrop */}
                     <div className="absolute right-[-40px] bottom-[-40px] w-96 h-96 opacity-10 pointer-events-none select-none">
                         <img src={ASSETS.logo} alt="" className="w-full h-full object-contain" />
@@ -312,13 +312,13 @@ const ShopDetails: React.FC = () => {
 
                     {/* ── Left Column: Media & Visualiser (7 cols) ── */}
                     <div className="lg:col-span-7 space-y-6 relative z-10">
-                        
+
                         {/* Main Image Showcase */}
                         <div className="relative aspect-square sm:aspect-[4/3] bg-[#0E182A] rounded-2xl overflow-hidden border border-white/10 shadow-2xl group">
-                            
-                            <img 
-                                src={product.image_url || '/Assets/bg2.jpg'} 
-                                alt={product.name} 
+
+                            <img
+                                src={product.image_url || '/Assets/bg2.jpg'}
+                                alt={product.name}
                                 className={`w-full h-full object-cover transition-transform duration-700 ${activeView === 'back' && flocageOption !== 'none' ? 'brightness-50' : 'group-hover:scale-105'}`}
                             />
 
@@ -351,11 +351,10 @@ const ShopDetails: React.FC = () => {
                             {/* Wishlist Button */}
                             <button
                                 onClick={() => toggleWishlist(product.id)}
-                                className={`absolute top-4 right-4 z-10 p-3 rounded-full border transition-all ${
-                                    isWishlisted 
-                                        ? 'bg-red-500 border-red-400 text-white shadow-xl' 
+                                className={`absolute top-4 right-4 z-10 p-3 rounded-full border transition-all ${isWishlisted
+                                        ? 'bg-red-500 border-red-400 text-white shadow-xl'
                                         : 'bg-black/40 border-white/20 text-gray-300 hover:text-white hover:bg-black/60 backdrop-blur-md'
-                                }`}
+                                    }`}
                             >
                                 <Heart size={18} fill={isWishlisted ? "currentColor" : "none"} />
                             </button>
@@ -365,21 +364,19 @@ const ShopDetails: React.FC = () => {
                         <div className="flex items-center justify-center gap-3">
                             <button
                                 onClick={() => setActiveView('front')}
-                                className={`px-5 py-2.5 rounded-xl text-xs font-bold font-display uppercase tracking-wider transition-all border ${
-                                    activeView === 'front' 
-                                        ? 'bg-[#002D62] text-white border-[#D4AF37]/50 shadow-lg' 
+                                className={`px-5 py-2.5 rounded-xl text-xs font-bold font-display uppercase tracking-wider transition-all border ${activeView === 'front'
+                                        ? 'bg-[#002D62] text-white border-[#D4AF37]/50 shadow-lg'
                                         : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
-                                }`}
+                                    }`}
                             >
                                 Vue Face (Front)
                             </button>
                             <button
                                 onClick={() => { setActiveView('back'); if (flocageOption === 'none') setFlocageOption('player'); }}
-                                className={`px-5 py-2.5 rounded-xl text-xs font-bold font-display uppercase tracking-wider transition-all border ${
-                                    activeView === 'back' 
-                                        ? 'bg-[#002D62] text-white border-[#D4AF37]/50 shadow-lg' 
+                                className={`px-5 py-2.5 rounded-xl text-xs font-bold font-display uppercase tracking-wider transition-all border ${activeView === 'back'
+                                        ? 'bg-[#002D62] text-white border-[#D4AF37]/50 shadow-lg'
                                         : 'bg-white/5 border-white/10 text-gray-400 hover:text-white'
-                                }`}
+                                    }`}
                             >
                                 Vue Dos (Aperçu Flocage)
                             </button>
@@ -435,11 +432,10 @@ const ShopDetails: React.FC = () => {
                                         <button
                                             key={s}
                                             onClick={() => setSelectedSize(s)}
-                                            className={`px-5 py-3 text-xs font-bold font-mono uppercase rounded-xl border transition-all ${
-                                                selectedSize === s
+                                            className={`px-5 py-3 text-xs font-bold font-mono uppercase rounded-xl border transition-all ${selectedSize === s
                                                     ? 'bg-[#002D62] text-white border-[#D4AF37] shadow-lg shadow-blue-900/40 scale-105'
                                                     : 'bg-[#0E182A] border-white/10 text-gray-300 hover:border-white/30'
-                                            }`}
+                                                }`}
                                         >
                                             {s}
                                         </button>
@@ -464,11 +460,10 @@ const ShopDetails: React.FC = () => {
                                         <button
                                             key={opt.id}
                                             onClick={() => { setFlocageOption(opt.id as any); setActiveView('back'); }}
-                                            className={`py-2.5 px-2 rounded-xl border text-center transition-all ${
-                                                flocageOption === opt.id
+                                            className={`py-2.5 px-2 rounded-xl border text-center transition-all ${flocageOption === opt.id
                                                     ? 'bg-[#002D62] text-white border-[#D4AF37] shadow-md'
                                                     : 'bg-white/5 text-gray-400 border-white/10 hover:bg-white/10 hover:text-white'
-                                            }`}
+                                                }`}
                                         >
                                             {opt.label}
                                         </button>
@@ -569,18 +564,16 @@ const ShopDetails: React.FC = () => {
                     <div className="flex border-b border-white/10 gap-6 overflow-x-auto font-display text-xs uppercase tracking-wider mb-6">
                         {[
                             { id: 'desc', label: 'Description & Fiche Technique' },
-                            { id: 'reviews', label: 'Avis Supporters (4.9 ★)' },
                             { id: 'shipping', label: 'Livraison & Retours' },
                             { id: 'care', label: 'Entretien & Conseils' }
                         ].map(tab => (
                             <button
                                 key={tab.id}
                                 onClick={() => setOpenAccordion(tab.id as any)}
-                                className={`pb-3 font-bold transition-all border-b-2 whitespace-nowrap ${
-                                    openAccordion === tab.id 
-                                        ? 'border-[#D4AF37] text-white' 
+                                className={`pb-3 font-bold transition-all border-b-2 whitespace-nowrap ${openAccordion === tab.id
+                                        ? 'border-[#D4AF37] text-white'
                                         : 'border-transparent text-gray-400 hover:text-gray-200'
-                                }`}
+                                    }`}
                             >
                                 {tab.label}
                             </button>
@@ -599,49 +592,7 @@ const ShopDetails: React.FC = () => {
                                 </div>
                                 <div className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-1">
                                     <span className="text-[10px] uppercase font-bold text-amber-400 block font-display">Écusson Officiel</span>
-                                    <p className="text-white font-bold">Écusson 3D Haute Définition brodé</p>
-                                </div>
-                            </div>
-                        </div>
-                    )}
-
-                    {openAccordion === 'reviews' && (
-                        <div className="space-y-6 text-xs text-gray-300">
-                            <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
-                                <div className="text-center border-r border-white/10 pr-6">
-                                    <div className="text-3xl font-black text-[#D4AF37] font-mono">4.9</div>
-                                    <div className="flex text-amber-400 justify-center my-1"><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/></div>
-                                    <div className="text-[10px] text-gray-400 font-bold uppercase">48 Avis Verifiés</div>
-                                </div>
-                                <div className="flex-1 space-y-1">
-                                    <div className="flex items-center gap-2">
-                                        <span className="w-12 text-[10px] text-gray-400">5 Étoiles</span>
-                                        <div className="flex-1 bg-white/10 h-2 rounded-full overflow-hidden"><div className="bg-amber-400 h-full w-[90%]" /></div>
-                                        <span className="w-8 font-mono text-right">90%</span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                        <span className="w-12 text-[10px] text-gray-400">4 Étoiles</span>
-                                        <div className="flex-1 bg-white/10 h-2 rounded-full overflow-hidden"><div className="bg-amber-400 h-full w-[10%]" /></div>
-                                        <span className="w-8 font-mono text-right">10%</span>
-                                    </div>
-                                </div>
-                            </div>
-
-                            <div className="space-y-3">
-                                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-1">
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-bold text-white">Youssef B. (Tiznit) — <span className="text-emerald-400 text-[10px]">Achat Vérifié ✓</span></span>
-                                        <span className="text-amber-400 flex"><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/></span>
-                                    </div>
-                                    <p className="text-gray-300">Qualité du flocage incroyable! Le maillot est très confortable pour les matchs. Dema USTA! 🔵🟡</p>
-                                </div>
-
-                                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-1">
-                                    <div className="flex justify-between items-center">
-                                        <span className="font-bold text-white">Hamza K. (Agadir) — <span className="text-emerald-400 text-[10px]">Achat Vérifié ✓</span></span>
-                                        <span className="text-amber-400 flex"><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/></span>
-                                    </div>
-                                    <p className="text-gray-300">Livraison rapide par CTM en 24h. Le maillot personnalisé avec mon prénom est parfait.</p>
+                                    <p className="text-white font-bold">Blason 3D Thermo-collé Haute Définition</p>
                                 </div>
                             </div>
                         </div>
@@ -682,7 +633,7 @@ const ShopDetails: React.FC = () => {
 
                         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                             {relatedProducts.map(rel => (
-                                <div 
+                                <div
                                     key={rel.id}
                                     onClick={() => navigate(`/shop/${rel.id}`)}
                                     className="bg-[#0B1528]/80 border border-white/10 rounded-2xl p-4 cursor-pointer hover:border-[#D4AF37]/50 transition-all group shadow-xl"
@@ -701,13 +652,13 @@ const ShopDetails: React.FC = () => {
 
             {/* ── Slide-Over Cart Drawer ───────── */}
             <div className={`fixed inset-0 z-50 transition-all duration-300 ${isCartOpen ? 'visible' : 'invisible'}`}>
-                <div 
-                    className={`absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300 ${isCartOpen ? 'opacity-100' : 'opacity-0'}`} 
-                    onClick={() => setIsCartOpen(false)} 
+                <div
+                    className={`absolute inset-0 bg-slate-950/80 backdrop-blur-md transition-opacity duration-300 ${isCartOpen ? 'opacity-100' : 'opacity-0'}`}
+                    onClick={() => setIsCartOpen(false)}
                 />
-                
+
                 <div className={`absolute top-0 right-0 w-full max-w-md h-full bg-[#0B1528] border-l border-white/10 shadow-2xl transition-transform duration-300 ${isCartOpen ? 'translate-x-0' : 'translate-x-full'} flex flex-col z-10`}>
-                    
+
                     {/* Drawer Header */}
                     <div className="p-6 border-b border-white/10 flex justify-between items-center bg-[#0E182A]">
                         <div className="flex items-center gap-3">
@@ -738,8 +689,8 @@ const ShopDetails: React.FC = () => {
                                 </span>
                             </div>
                             <div className="w-full bg-white/10 h-2 rounded-full overflow-hidden">
-                                <div 
-                                    className="bg-gradient-to-r from-blue-500 to-[#D4AF37] h-full transition-all duration-500" 
+                                <div
+                                    className="bg-gradient-to-r from-blue-500 to-[#D4AF37] h-full transition-all duration-500"
                                     style={{ width: `${freeShippingPercent}%` }}
                                 />
                             </div>
@@ -826,8 +777,8 @@ const ShopDetails: React.FC = () => {
                             <div className="h-full flex flex-col items-center justify-center text-center text-gray-400 py-16">
                                 <ShoppingBag size={48} className="opacity-20 mb-3 text-[#D4AF37]" />
                                 <p className="text-sm font-medium text-white">Votre panier est vide</p>
-                                <button 
-                                    onClick={() => setIsCartOpen(false)} 
+                                <button
+                                    onClick={() => setIsCartOpen(false)}
                                     className="mt-4 px-6 py-2.5 bg-[#002D62] text-white font-bold text-xs uppercase tracking-wider rounded-xl hover:bg-blue-900 transition-colors font-display border border-[#D4AF37]/40"
                                 >
                                     Parcourir La Boutique
@@ -838,7 +789,7 @@ const ShopDetails: React.FC = () => {
                                 {cart.map((item, index) => (
                                     <div key={index} className="flex gap-3 bg-white/5 border border-white/10 p-3 rounded-2xl relative group">
                                         <img src={item.image_url || '/Assets/bg2.jpg'} className="w-16 h-20 object-cover rounded-xl bg-gray-900 border border-white/10 shrink-0" alt={item.name} />
-                                        
+
                                         <div className="flex-1 min-w-0">
                                             <h4 className="font-bold text-white text-xs truncate leading-snug">{item.name}</h4>
                                             <div className="flex flex-wrap gap-1.5 my-1 text-[10px]">
@@ -890,8 +841,8 @@ const ShopDetails: React.FC = () => {
                                         </div>
                                     </div>
 
-                                    <button 
-                                        onClick={() => setCheckoutStep('details')} 
+                                    <button
+                                        onClick={() => setCheckoutStep('details')}
                                         className="w-full py-3.5 bg-[#002D62] hover:bg-blue-900 border border-[#D4AF37]/40 text-white font-bold uppercase text-xs tracking-wider rounded-xl transition-all shadow-lg flex items-center justify-center gap-2 font-display"
                                     >
                                         Passer La Commande <ArrowRight size={16} />
@@ -899,16 +850,16 @@ const ShopDetails: React.FC = () => {
                                 </>
                             ) : (
                                 <div className="flex gap-3">
-                                    <button 
-                                        onClick={() => setCheckoutStep('cart')} 
+                                    <button
+                                        onClick={() => setCheckoutStep('cart')}
                                         className="px-5 py-3 border border-white/10 text-gray-300 font-bold uppercase text-xs rounded-xl hover:bg-white/5 transition-colors font-display"
                                     >
                                         Retour
                                     </button>
-                                    <button 
-                                        form="checkout-form-details" 
-                                        type="submit" 
-                                        disabled={isSubmitting} 
+                                    <button
+                                        form="checkout-form-details"
+                                        type="submit"
+                                        disabled={isSubmitting}
                                         className="flex-1 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-bold uppercase text-xs tracking-wider rounded-xl disabled:opacity-60 transition-colors shadow-lg font-display flex items-center justify-center gap-2"
                                     >
                                         {isSubmitting ? 'Validation...' : 'Confirmer Commande (COD)'}

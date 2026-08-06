@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Menu, ShoppingBag, Ticket, Search, User, Heart } from "lucide-react";
+import { Menu, ShoppingBag, Ticket, Search, User } from "lucide-react";
 import { Link } from "react-router-dom";
 import { SPLASH_CONFIG } from "../constants";
 import GlobalSearchModal from "./GlobalSearchModal";
@@ -31,8 +31,7 @@ export default function Navbar() {
 
   const utilityLinks = [
     { name: 'LA BOUTIQUE', icon: ShoppingBag, path: '/shop' },
-    { name: 'BILLETTERIE', icon: Ticket, path: '/tickets' },
-    { name: 'CARTE MEMBRE', icon: Ticket, path: '/membership' },
+    { name: 'TICKETS', icon: Ticket, path: '/tickets' },
   ];
 
   return (
@@ -137,26 +136,6 @@ export default function Navbar() {
 
           {/* Desktop Action Buttons */}
           <div className="hidden ml-auto md:flex items-center gap-3">
-            {/* Wishlist Link */}
-            <Link
-              to="/shop/wishlist"
-              aria-label="Wishlist"
-              className="w-9 h-9 bg-white hover:bg-slate-100 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 shrink-0"
-              title="Mes Favoris"
-            >
-              <Heart size={18} className="text-red-500" />
-            </Link>
-
-            {/* Cart Link */}
-            <Link
-              to="/shop/cart"
-              aria-label="Shopping Cart"
-              className="w-9 h-9 bg-[#002D62] hover:bg-blue-900 border border-[#D4AF37]/50 rounded-xl flex items-center justify-center shadow-md transition-all duration-200 hover:scale-105 shrink-0"
-              title="Mon Panier"
-            >
-              <ShoppingBag size={18} className="text-[#D4AF37]" />
-            </Link>
-
             {/* Site-Wide Global Search Square Button */}
             <button
               onClick={() => setIsSearchOpen(true)}
@@ -249,9 +228,9 @@ export default function Navbar() {
       </nav>
 
       {/* Global Search Modal Overlay */}
-      <GlobalSearchModal 
-        isOpen={isSearchOpen} 
-        onClose={() => setIsSearchOpen(false)} 
+      <GlobalSearchModal
+        isOpen={isSearchOpen}
+        onClose={() => setIsSearchOpen(false)}
       />
     </>
   );

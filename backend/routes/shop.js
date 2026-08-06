@@ -5,14 +5,10 @@ const {
     getProductById,
     createProduct,
     updateProduct,
-    deleteProduct,
-    getCoupons,
-    createCoupon
+    deleteProduct
 } = require('../controllers/shopController');
 
 // Routes
-router.get('/coupons', getCoupons);
-router.post('/coupons', createCoupon);
 router.get('/', getAllProducts);
 router.get('/:id', getProductById);
 router.post('/', createProduct);

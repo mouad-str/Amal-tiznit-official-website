@@ -61,14 +61,6 @@ export const API = {
         create: (data: Partial<Ticket>) => apiFetch<{ id: number }>('/tickets', { method: 'POST', body: JSON.stringify(data) }),
         update: (id: number, data: Partial<Ticket>) => apiFetch<void>(`/tickets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
         delete: (id: number) => apiFetch<void>(`/tickets/${id}`, { method: 'DELETE' }),
-        book: (data: { match_id: number; category: string; seat_zone: string; quantity: number; total_price: number; customer_name: string; customer_phone: string; customer_email: string }) =>
-            apiFetch<any>('/tickets/book', { method: 'POST', body: JSON.stringify(data) }),
-    },
-    memberships: {
-        create: (data: { full_name: string; email: string; phone: string; tier: string }) =>
-            apiFetch<any>('/memberships', { method: 'POST', body: JSON.stringify(data) }),
-        getByCode: (code: string) => apiFetch<any>(`/memberships/code/${encodeURIComponent(code)}`),
-        getAll: () => apiFetch<any[]>('/memberships', { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }),
     },
     contact: {
         getAll: () => apiFetch<ContactMessage[]>('/contact'),
@@ -86,13 +78,7 @@ export const API = {
             customer_email: string;
             customer_phone: string;
             customer_address: string;
-            items: { 
-                product_id: number; 
-                quantity: number;
-                size?: string;
-                flocage?: string | null;
-                has_patch?: boolean;
-            }[]
+            items: { product_id: number; quantity: number }[]
         }) => apiFetch<{ success: boolean; orderId: number; total: number }>('/orders', { method: 'POST', body: JSON.stringify(data) }),
         getAll: () => apiFetch<any[]>('/orders', { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }),
         updateStatus: (id: number, status: string) => apiFetch<void>(`/orders/${id}/status`, {
@@ -100,7 +86,6 @@ export const API = {
             body: JSON.stringify({ status }),
             headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` }
         }),
-        track: (orderId: string, phone?: string) => apiFetch<any>(`/orders/track?orderId=${encodeURIComponent(orderId)}&phone=${encodeURIComponent(phone || '')}`),
     }
 };
 
@@ -143,18 +128,12 @@ export interface NewsArticle {
 export interface Product {
     id: number;
     name: string;
-    slug?: string;
     description: string;
     price: number;
-    compare_at_price?: number | null;
     image_url: string;
     category: string;
-    collection?: string;
-    gender?: string;
     stock: number;
     sizes: string;
-    is_featured?: boolean;
-    is_new?: boolean;
 }
 
 export interface Ticket {
@@ -173,6 +152,15 @@ export interface ContactMessage {
     created_at: string;
 }
 
+export interface TicketSettings {
+    title: string;
+    subTitlePrefix: string;
+    branding: {
+        logo: string;
+        teamName: string;
+    };
+    sponsors: string[];
+}
 export interface TicketSettings {
     title: string;
     subTitlePrefix: string;

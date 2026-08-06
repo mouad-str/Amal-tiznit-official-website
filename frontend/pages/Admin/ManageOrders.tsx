@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { API } from '../../api';
 import { ShoppingBag, Eye, CheckCircle, Truck, XCircle, Clock, Printer } from 'lucide-react';
+import { ASSETS } from '../../constants';
 
 interface Order {
     id: number;
@@ -204,7 +205,7 @@ const ManageOrders: React.FC = () => {
                                             <div className="text-xs text-gray-500">{order.customer_email}</div>
                                         </td>
                                         <td className="p-4 text-sm text-gray-500">{new Date(order.created_at).toLocaleDateString()}</td>
-                                        <td className="p-4 font-black text-blue-600">{order.total || order.total_amount} DH</td>
+                                        <td className="p-4 font-black text-blue-600">{order.total_amount} DH</td>
                                         <td className="p-4">{getStatusBadge(order.status)}</td>
                                         <td className="p-4 text-right">
                                             <button
@@ -275,8 +276,8 @@ const ManageOrders: React.FC = () => {
                                                     key={status}
                                                     onClick={() => updateStatus(selectedOrder.id, status)}
                                                     className={`px-3 py-2 text-xs font-bold uppercase rounded-lg border transition-all ${selectedOrder.status === status
-                                                            ? 'bg-[#002D62] text-white border-[#002D62] shadow-md'
-                                                            : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
+                                                        ? 'bg-[#002D62] text-white border-[#002D62] shadow-md'
+                                                        : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:text-slate-900'
                                                         }`}
                                                 >
                                                     Mark {status}
@@ -300,29 +301,19 @@ const ManageOrders: React.FC = () => {
                                             </tr>
                                         </thead>
                                         <tbody className="divide-y divide-slate-100 text-slate-700">
-                                            {selectedOrder.items?.map((item: any, i: number) => {
-                                                const price = item.price || item.price_at_time || 0;
-                                                return (
-                                                    <tr key={i}>
-                                                        <td className="p-3 font-medium text-slate-900">
-                                                            <div>{item.product_name}</div>
-                                                            <div className="flex flex-wrap gap-1.5 mt-1 text-[10px]">
-                                                                {item.size && <span className="bg-slate-100 border border-slate-200 text-slate-600 px-1.5 py-0.5 rounded font-mono">Taille: {item.size}</span>}
-                                                                {item.flocage && <span className="bg-amber-100 border border-amber-300 text-amber-900 px-1.5 py-0.5 rounded font-mono font-bold">Flocage: {item.flocage}</span>}
-                                                                {item.has_patch ? <span className="bg-emerald-100 border border-emerald-300 text-emerald-900 px-1.5 py-0.5 rounded font-mono font-bold">Patch 🇲🇦</span> : null}
-                                                            </div>
-                                                        </td>
-                                                        <td className="p-3 text-center font-mono">{item.quantity}</td>
-                                                        <td className="p-3 text-right text-slate-500 font-mono">{price} DH</td>
-                                                        <td className="p-3 text-right font-bold text-[#002D62] font-mono">{price * item.quantity} DH</td>
-                                                    </tr>
-                                                );
-                                            })}
+                                            {selectedOrder.items?.map((item: any, i: number) => (
+                                                <tr key={i}>
+                                                    <td className="p-3 font-medium text-slate-900">{item.product_name}</td>
+                                                    <td className="p-3 text-center font-mono">{item.quantity}</td>
+                                                    <td className="p-3 text-right text-slate-500 font-mono">{item.price_at_time} DH</td>
+                                                    <td className="p-3 text-right font-bold text-[#002D62] font-mono">{item.price_at_time * item.quantity} DH</td>
+                                                </tr>
+                                            ))}
                                         </tbody>
                                         <tfoot className="bg-slate-50 font-bold border-t border-slate-200 text-slate-900">
                                             <tr>
                                                 <td colSpan={3} className="p-3 text-right font-display">Grand Total</td>
-                                                <td className="p-3 text-right text-blue-700 font-mono font-black text-base">{selectedOrder.total || selectedOrder.total_amount} DH</td>
+                                                <td className="p-3 text-right text-blue-700 font-mono font-black text-base">{selectedOrder.total_amount} DH</td>
                                             </tr>
                                         </tfoot>
                                     </table>

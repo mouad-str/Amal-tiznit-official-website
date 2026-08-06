@@ -87,46 +87,10 @@ const deleteTicket = async (req, res) => {
     }
 };
 
-// POST book ticket seat (Public)
-const bookTicket = async (req, res) => {
-    try {
-        const { match_id, category, seat_zone, quantity, total_price, customer_name, customer_phone, customer_email } = req.body;
-
-        if (!match_id || !category || !customer_name || !customer_phone) {
-            return res.status(400).json({ error: 'Informations de réservation incomplètes' });
-        }
-
-        const randomRef = Math.floor(100000 + Math.random() * 900000);
-        const booking_ref = `TCK-2026-${randomRef}`;
-
-        const [result] = await pool.query(`
-            INSERT INTO ticket_bookings (booking_ref, match_id, category, seat_zone, quantity, total_price, customer_name, customer_phone, customer_email)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-        `, [booking_ref, match_id, category, seat_zone || 'Tribune', quantity || 1, total_price, customer_name, customer_phone, customer_email || '']);
-
-        res.status(201).json({
-            id: result.insertId,
-            booking_ref,
-            match_id,
-            category,
-            seat_zone: seat_zone || 'Tribune',
-            quantity: quantity || 1,
-            total_price,
-            customer_name,
-            customer_phone
-        });
-
-    } catch (error) {
-        console.error('Error booking ticket:', error);
-        res.status(500).json({ error: 'Failed to book ticket' });
-    }
-};
-
 module.exports = {
     getTicketsByMatch,
     getAllTickets,
     createTicket,
     updateTicket,
-    deleteTicket,
-    bookTicket
+    deleteTicket
 };
