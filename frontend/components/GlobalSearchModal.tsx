@@ -40,7 +40,14 @@ export const GlobalSearchModal: React.FC<GlobalSearchModalProps> = ({ isOpen, on
             setTimeout(() => {
                 inputRef.current?.focus();
             }, 100);
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
         }
+
+        return () => {
+            document.body.style.overflow = '';
+        };
     }, [isOpen]);
 
     // Keydown ESC handler

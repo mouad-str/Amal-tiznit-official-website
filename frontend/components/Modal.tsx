@@ -14,14 +14,19 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, children, title }) => {
     const [isVisible, setIsVisible] = useState(false);
 
     useEffect(() => {
+        let timer: NodeJS.Timeout;
         if (isOpen) {
             setIsVisible(true);
             document.body.style.overflow = 'hidden';
         } else {
-            const timer = setTimeout(() => setIsVisible(false), 300);
-            document.body.style.overflow = 'unset';
-            return () => clearTimeout(timer);
+            timer = setTimeout(() => setIsVisible(false), 300);
+            document.body.style.overflow = '';
         }
+
+        return () => {
+            if (timer) clearTimeout(timer);
+            document.body.style.overflow = '';
+        };
     }, [isOpen]);
 
     if (!isVisible && !isOpen) return null;

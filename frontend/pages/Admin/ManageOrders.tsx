@@ -34,6 +34,17 @@ const ManageOrders: React.FC = () => {
         fetchOrders();
     }, []);
 
+    useEffect(() => {
+        if (selectedOrder) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [selectedOrder]);
+
     const updateStatus = async (id: number, status: string) => {
         try {
             await API.orders.updateStatus(id, status);

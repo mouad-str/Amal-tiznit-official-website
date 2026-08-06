@@ -74,6 +74,19 @@ const Shop = () => {
 
     useEffect(() => { saveCart(cart); }, [cart]);
 
+    /* ── Scroll Lock Management ─────────────── */
+
+    useEffect(() => {
+        if (isCartOpen || selectedProduct) {
+            document.body.style.overflow = 'hidden';
+        } else {
+            document.body.style.overflow = '';
+        }
+        return () => {
+            document.body.style.overflow = '';
+        };
+    }, [isCartOpen, selectedProduct]);
+
     /* ── Cart actions ──────────────────────── */
 
     const addToCart = useCallback((product: Product, size: string) => {
