@@ -11,6 +11,7 @@ import NewsDetail from './pages/NewsDetail';
 import Contact from './pages/Contact';
 import Tickets from './pages/Tickets';
 import Shop from './pages/Shop';
+import ShopDetails from './pages/ShopDetails';
 import ScrollToTop from './components/ScrollToTop';
 import SplashScreen from './components/SplashScreen';
 import AdminLayout from './components/AdminLayout';
@@ -56,6 +57,7 @@ const App: React.FC = () => {
             <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
             <Route path="/tickets" element={<MainLayout><Tickets /></MainLayout>} />
             <Route path="/shop" element={<MainLayout><Shop /></MainLayout>} />
+            <Route path="/shop/:id" element={<MainLayout><ShopDetails /></MainLayout>} />
 
             {/* Admin Authentication */}
             <Route path="/admin/login" element={<Login />} />

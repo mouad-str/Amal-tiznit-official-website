@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { 
     ShoppingBag, 
     Search, 
@@ -85,6 +86,7 @@ const PHONE_REGEX = /^(\+212|0)[5-7]\d{8}$/;
 /* ── Component ─────────────────────────────── */
 
 const Shop: React.FC = () => {
+    const navigate = useNavigate();
     const [products, setProducts] = useState<Product[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -336,13 +338,7 @@ const Shop: React.FC = () => {
     };
 
     const handleOpenProductModal = (product: Product) => {
-        setSelectedProduct(product);
-        setSelectedSize(getDefaultSize(product));
-        setFlocageOption('none');
-        setCustomName('');
-        setCustomNumber('');
-        setAddPatch(false);
-        setActiveTab('front');
+        navigate(`/shop/${product.id}`);
     };
 
     const handleSelectPlayerFromShopByPlayer = (player: typeof SQUAD_STAR_PLAYERS[0]) => {
