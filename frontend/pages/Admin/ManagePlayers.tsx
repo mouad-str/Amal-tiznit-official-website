@@ -2,12 +2,6 @@ import React, { useState, useEffect } from 'react';
 import { API, Player } from '../../api';
 import { Upload, X, Check, Image as ImageIcon, AlertCircle, Trash2, Edit2, Plus, Search, Trophy, Shield, Activity } from 'lucide-react';
 
-const PRESET_IMAGES = [
-  '/Assets/bg.jpg',
-  '/Assets/bg1.jpg',
-  '/Assets/bg2.jpg',
-];
-
 const ManagePlayers: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
   const [loading, setLoading] = useState(true);
@@ -330,10 +324,10 @@ const ManagePlayers: React.FC = () => {
                   )}
                 </div>
 
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
                   <label className="cursor-pointer border-2 border-dashed border-blue-200 hover:border-blue-500 bg-blue-50/50 hover:bg-blue-50 p-3 rounded-xl flex items-center justify-center gap-2 transition-colors">
                     <Upload size={16} className="text-blue-600" />
-                    <span className="text-xs font-bold text-blue-700 uppercase">Télécharger Photo...</span>
+                    <span className="text-xs font-bold text-blue-700 uppercase">Télécharger Une Photo Depuis L'Appareil...</span>
                     <input
                       type="file"
                       accept="image/*"
@@ -344,20 +338,6 @@ const ManagePlayers: React.FC = () => {
                       }}
                     />
                   </label>
-
-                  <div className="flex items-center justify-around bg-gray-50 border p-1 rounded-xl">
-                    <span className="text-[10px] font-bold text-gray-400 uppercase">Presets:</span>
-                    {PRESET_IMAGES.map((img, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setFormData({ ...formData, image_url: img })}
-                        className={`w-8 h-8 rounded-lg overflow-hidden border-2 ${formData.image_url === img ? 'border-blue-600 scale-110' : 'border-transparent'}`}
-                      >
-                        <img src={img} alt="" className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
                 </div>
               </div>
 
