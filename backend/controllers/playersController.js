@@ -38,18 +38,20 @@ const createPlayer = async (req, res) => {
             matches_played, goals, assists, minutes_played, yellow_cards, red_cards
         } = req.body;
 
+        const playerNum = Number(number) || 1;
+
         const [result] = await pool.query(
             `INSERT INTO players 
             (name, position, number, image_url, nationality, team_category, matches_played, goals, assists, minutes_played, yellow_cards, red_cards)
             VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [name, position, number, image_url, nationality || 'Moroccan', team_category || 'Senior',
-                matches_played || 0, goals || 0, assists || 0, minutes_played || 0, yellow_cards || 0, red_cards || 0]
+            [name, position, playerNum, image_url || '', nationality || 'Moroccan', team_category || 'Senior',
+                Number(matches_played) || 0, Number(goals) || 0, Number(assists) || 0, Number(minutes_played) || 0, Number(yellow_cards) || 0, Number(red_cards) || 0]
         );
 
         res.status(201).json({ id: result.insertId, message: 'Player created successfully' });
     } catch (error) {
         console.error('Error creating player:', error);
-        res.status(500).json({ error: 'Failed to create player' });
+        res.status(500).json({ error: 'Failed to create player: ' + error.message });
     }
 };
 
@@ -61,13 +63,15 @@ const updatePlayer = async (req, res) => {
             matches_played, goals, assists, minutes_played, yellow_cards, red_cards
         } = req.body;
 
+        const playerNum = Number(number) || 1;
+
         const [result] = await pool.query(
             `UPDATE players SET 
             name = ?, position = ?, number = ?, image_url = ?, nationality = ?, team_category = ?,
             matches_played = ?, goals = ?, assists = ?, minutes_played = ?, yellow_cards = ?, red_cards = ?
             WHERE id = ?`,
-            [name, position, number, image_url, nationality || 'Moroccan', team_category || 'Senior',
-                matches_played || 0, goals || 0, assists || 0, minutes_played || 0, yellow_cards || 0, red_cards || 0,
+            [name, position, playerNum, image_url || '', nationality || 'Moroccan', team_category || 'Senior',
+                Number(matches_played) || 0, Number(goals) || 0, Number(assists) || 0, Number(minutes_played) || 0, Number(yellow_cards) || 0, Number(red_cards) || 0,
                 req.params.id]
         );
 
@@ -77,7 +81,7 @@ const updatePlayer = async (req, res) => {
         res.json({ message: 'Player updated successfully' });
     } catch (error) {
         console.error('Error updating player:', error);
-        res.status(500).json({ error: 'Failed to update player' });
+        res.status(500).json({ error: 'Failed to update player: ' + error.message });
     }
 };
 

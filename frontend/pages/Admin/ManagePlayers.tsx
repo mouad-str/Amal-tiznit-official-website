@@ -130,7 +130,7 @@ const ManagePlayers: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Number</label>
-                  <input type="number" value={formData.number} onChange={e => setFormData({ ...formData, number: parseInt(e.target.value) })}
+                  <input type="number" value={formData.number} onChange={e => setFormData({ ...formData, number: parseInt(e.target.value) || 0 })}
                     className="w-full border rounded-lg px-4 py-2" required />
                 </div>
                 <div className="col-span-2">
@@ -193,12 +193,12 @@ const ManagePlayers: React.FC = () => {
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Goals</label>
-                  <input type="number" value={formData.goals} onChange={e => setFormData({ ...formData, goals: parseInt(e.target.value) })}
+                  <input type="number" value={formData.goals} onChange={e => setFormData({ ...formData, goals: parseInt(e.target.value) || 0 })}
                     className="w-full border rounded-lg px-4 py-2" />
                 </div>
                 <div>
                   <label className="block text-sm font-bold text-gray-700 mb-1">Assists</label>
-                  <input type="number" value={formData.assists} onChange={e => setFormData({ ...formData, assists: parseInt(e.target.value) })}
+                  <input type="number" value={formData.assists} onChange={e => setFormData({ ...formData, assists: parseInt(e.target.value) || 0 })}
                     className="w-full border rounded-lg px-4 py-2" />
                 </div>
               </div>
