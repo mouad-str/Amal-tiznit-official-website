@@ -569,6 +569,7 @@ const ShopDetails: React.FC = () => {
                     <div className="flex border-b border-white/10 gap-6 overflow-x-auto font-display text-xs uppercase tracking-wider mb-6">
                         {[
                             { id: 'desc', label: 'Description & Fiche Technique' },
+                            { id: 'reviews', label: 'Avis Supporters (4.9 ★)' },
                             { id: 'shipping', label: 'Livraison & Retours' },
                             { id: 'care', label: 'Entretien & Conseils' }
                         ].map(tab => (
@@ -598,7 +599,49 @@ const ShopDetails: React.FC = () => {
                                 </div>
                                 <div className="bg-white/5 p-4 rounded-xl border border-white/5 space-y-1">
                                     <span className="text-[10px] uppercase font-bold text-amber-400 block font-display">Écusson Officiel</span>
-                                    <p className="text-white font-bold">Blason 3D Thermo-collé Haute Définition</p>
+                                    <p className="text-white font-bold">Écusson 3D Haute Définition brodé</p>
+                                </div>
+                            </div>
+                        </div>
+                    )}
+
+                    {openAccordion === 'reviews' && (
+                        <div className="space-y-6 text-xs text-gray-300">
+                            <div className="flex items-center gap-4 bg-white/5 p-4 rounded-2xl border border-white/5">
+                                <div className="text-center border-r border-white/10 pr-6">
+                                    <div className="text-3xl font-black text-[#D4AF37] font-mono">4.9</div>
+                                    <div className="flex text-amber-400 justify-center my-1"><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/><Star size={12} fill="currentColor"/></div>
+                                    <div className="text-[10px] text-gray-400 font-bold uppercase">48 Avis Verifiés</div>
+                                </div>
+                                <div className="flex-1 space-y-1">
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-12 text-[10px] text-gray-400">5 Étoiles</span>
+                                        <div className="flex-1 bg-white/10 h-2 rounded-full overflow-hidden"><div className="bg-amber-400 h-full w-[90%]" /></div>
+                                        <span className="w-8 font-mono text-right">90%</span>
+                                    </div>
+                                    <div className="flex items-center gap-2">
+                                        <span className="w-12 text-[10px] text-gray-400">4 Étoiles</span>
+                                        <div className="flex-1 bg-white/10 h-2 rounded-full overflow-hidden"><div className="bg-amber-400 h-full w-[10%]" /></div>
+                                        <span className="w-8 font-mono text-right">10%</span>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div className="space-y-3">
+                                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-1">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-bold text-white">Youssef B. (Tiznit) — <span className="text-emerald-400 text-[10px]">Achat Vérifié ✓</span></span>
+                                        <span className="text-amber-400 flex"><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/></span>
+                                    </div>
+                                    <p className="text-gray-300">Qualité du flocage incroyable! Le maillot est très confortable pour les matchs. Dema USTA! 🔵🟡</p>
+                                </div>
+
+                                <div className="bg-white/5 p-4 rounded-2xl border border-white/5 space-y-1">
+                                    <div className="flex justify-between items-center">
+                                        <span className="font-bold text-white">Hamza K. (Agadir) — <span className="text-emerald-400 text-[10px]">Achat Vérifié ✓</span></span>
+                                        <span className="text-amber-400 flex"><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/><Star size={10} fill="currentColor"/></span>
+                                    </div>
+                                    <p className="text-gray-300">Livraison rapide par CTM en 24h. Le maillot personnalisé avec mon prénom est parfait.</p>
                                 </div>
                             </div>
                         </div>
