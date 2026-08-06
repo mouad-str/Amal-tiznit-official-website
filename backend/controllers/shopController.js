@@ -97,6 +97,13 @@ const deleteProduct = async (req, res) => {
         if (result.affectedRows === 0) {
             return res.status(404).json({ error: 'Product not found' });
         }
+        res.json({ message: 'Product deleted successfully' });
+    } catch (error) {
+        console.error('Error deleting product:', error);
+        res.status(500).json({ error: 'Failed to delete product' });
+    }
+};
+
 // GET coupons
 const getCoupons = async (req, res) => {
     try {

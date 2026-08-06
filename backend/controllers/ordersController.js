@@ -132,6 +132,10 @@ const updateOrderStatus = async (req, res) => {
         res.json({ message: 'Order status updated' });
     } catch (error) {
         console.error('Error updating order:', error);
+        res.status(500).json({ error: 'Failed to update order' });
+    }
+};
+
 // GET track single order (Customer Public)
 const trackOrder = async (req, res) => {
     try {
