@@ -2,7 +2,7 @@ const { pool } = require('../config/db');
 
 /**
  * Shop Controller
- * Handles all CRUD operations for products
+ * Product CRUD operations and taxonomy management
  */
 
 // GET all products
@@ -30,15 +30,21 @@ const getProductById = async (req, res) => {
     }
 };
 
-// POST create new product
+// POST create product
 const createProduct = async (req, res) => {
     try {
-        const { name, description, price, image_url, category, stock, sizes } = req.body;
+        const { name, slug, description, price, compare_at_price, image_url, category, collection, gender, stock, sizes, is_featured, is_new } = req.body;
+
+        const productSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
         const [result] = await pool.query(
-            `INSERT INTO products (name, description, price, image_url, category, stock, sizes)
-            VALUES (?, ?, ?, ?, ?, ?, ?)`,
-            [name, description || null, price, image_url, category, stock || 100, sizes || 'S,M,L,XL']
+            `INSERT INTO products (name, slug, description, price, compare_at_price, image_url, category, collection, gender, stock, sizes, is_featured, is_new)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                name, productSlug, description || null, price, compare_at_price || null, 
+                image_url, category, collection || 'Main', gender || 'Unisex', stock || 100, 
+                sizes || 'S,M,L,XL', is_featured ? 1 : 0, is_new ? 1 : 0
+            ]
         );
 
         res.status(201).json({ id: result.insertId, message: 'Product created successfully' });
@@ -51,12 +57,21 @@ const createProduct = async (req, res) => {
 // PUT update product
 const updateProduct = async (req, res) => {
     try {
-        const { name, description, price, image_url, category, stock, sizes } = req.body;
+        const { name, slug, description, price, compare_at_price, image_url, category, collection, gender, stock, sizes, is_featured, is_new } = req.body;
+
+        const productSlug = slug || name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
 
         const [result] = await pool.query(
-            `UPDATE products SET name = ?, description = ?, price = ?, image_url = ?, category = ?, stock = ?, sizes = ?
+            `UPDATE products SET 
+                name = ?, slug = ?, description = ?, price = ?, compare_at_price = ?, 
+                image_url = ?, category = ?, collection = ?, gender = ?, stock = ?, 
+                sizes = ?, is_featured = ?, is_new = ? 
             WHERE id = ?`,
-            [name, description || null, price, image_url, category, stock, sizes || 'S,M,L,XL', req.params.id]
+            [
+                name, productSlug, description || null, price, compare_at_price || null, 
+                image_url, category, collection || 'Main', gender || 'Unisex', stock, 
+                sizes || 'S,M,L,XL', is_featured ? 1 : 0, is_new ? 1 : 0, req.params.id
+            ]
         );
 
         if (result.affectedRows === 0) {
@@ -83,14 +98,14 @@ const deleteProduct = async (req, res) => {
     }
 };
 
-module.exports = {
-    getAllProducts,
-    getProductById,
-    createProduct,
-    updateProduct,
-    deleteProduct
-};
-res.status(500).json({ error: 'Failed to fetch coupons' });
+// GET coupons
+const getCoupons = async (req, res) => {
+    try {
+        const [rows] = await pool.query('SELECT * FROM coupons ORDER BY id DESC');
+        res.json(rows);
+    } catch (error) {
+        console.error('Error fetching coupons:', error);
+        res.status(500).json({ error: 'Failed to fetch coupons' });
     }
 };
 
