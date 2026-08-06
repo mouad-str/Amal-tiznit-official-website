@@ -34,15 +34,15 @@ const getPlayerById = async (req, res) => {
 const createPlayer = async (req, res) => {
     try {
         const {
-            name, position, number, image_url, nationality,
+            name, position, number, image_url, nationality, team_category,
             matches_played, goals, assists, minutes_played, yellow_cards, red_cards
         } = req.body;
 
         const [result] = await pool.query(
             `INSERT INTO players 
-            (name, position, number, image_url, nationality, matches_played, goals, assists, minutes_played, yellow_cards, red_cards)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [name, position, number, image_url, nationality || 'Moroccan',
+            (name, position, number, image_url, nationality, team_category, matches_played, goals, assists, minutes_played, yellow_cards, red_cards)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [name, position, number, image_url, nationality || 'Moroccan', team_category || 'Senior',
                 matches_played || 0, goals || 0, assists || 0, minutes_played || 0, yellow_cards || 0, red_cards || 0]
         );
 
@@ -57,17 +57,17 @@ const createPlayer = async (req, res) => {
 const updatePlayer = async (req, res) => {
     try {
         const {
-            name, position, number, image_url, nationality,
+            name, position, number, image_url, nationality, team_category,
             matches_played, goals, assists, minutes_played, yellow_cards, red_cards
         } = req.body;
 
         const [result] = await pool.query(
             `UPDATE players SET 
-            name = ?, position = ?, number = ?, image_url = ?, nationality = ?,
+            name = ?, position = ?, number = ?, image_url = ?, nationality = ?, team_category = ?,
             matches_played = ?, goals = ?, assists = ?, minutes_played = ?, yellow_cards = ?, red_cards = ?
             WHERE id = ?`,
-            [name, position, number, image_url, nationality,
-                matches_played, goals, assists, minutes_played, yellow_cards, red_cards,
+            [name, position, number, image_url, nationality || 'Moroccan', team_category || 'Senior',
+                matches_played || 0, goals || 0, assists || 0, minutes_played || 0, yellow_cards || 0, red_cards || 0,
                 req.params.id]
         );
 

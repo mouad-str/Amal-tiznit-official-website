@@ -39,9 +39,6 @@ app.use((req, res, next) => {
     next();
 });
 
-const membershipsRoutes = require('./routes/memberships');
-const votesRoutes = require('./routes/votes');
-
 // ============================================
 // API ROUTES
 // ============================================
@@ -55,8 +52,6 @@ app.use('/api/contact', contactRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/orders', ordersRoutes);
 app.use('/api/auth', authRoutes);
-app.use('/api/memberships', membershipsRoutes);
-app.use('/api/votes', votesRoutes);
 
 // Root redirect → frontend
 app.get('/', (req, res) => {

@@ -12,9 +12,6 @@ import Contact from './pages/Contact';
 import Tickets from './pages/Tickets';
 import Shop from './pages/Shop';
 import ShopDetails from './pages/ShopDetails';
-import Vote from './pages/Vote';
-import TeamsHub from './pages/TeamsHub';
-import StadiumGuide from './pages/StadiumGuide';
 import ScrollToTop from './components/ScrollToTop';
 import SplashScreen from './components/SplashScreen';
 import AdminLayout from './components/AdminLayout';
@@ -61,9 +58,6 @@ const App: React.FC = () => {
             <Route path="/tickets" element={<MainLayout><Tickets /></MainLayout>} />
             <Route path="/shop" element={<MainLayout><Shop /></MainLayout>} />
             <Route path="/shop/:id" element={<MainLayout><ShopDetails /></MainLayout>} />
-            <Route path="/vote" element={<MainLayout><Vote /></MainLayout>} />
-            <Route path="/teams" element={<MainLayout><TeamsHub /></MainLayout>} />
-            <Route path="/stadium" element={<MainLayout><StadiumGuide /></MainLayout>} />
 
             {/* Admin Authentication */}
             <Route path="/admin/login" element={<Login />} />
