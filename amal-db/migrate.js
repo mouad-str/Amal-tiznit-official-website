@@ -136,6 +136,18 @@ async function migrate() {
             )
         `);
 
+        // M010 — Player Bio & Physical Metrics
+        await runSafe('[M010] players.birth_date',
+            "ALTER TABLE players ADD COLUMN birth_date DATE DEFAULT NULL AFTER nationality");
+        await runSafe('[M010] players.age',
+            "ALTER TABLE players ADD COLUMN age INT DEFAULT NULL AFTER birth_date");
+        await runSafe('[M010] players.height',
+            "ALTER TABLE players ADD COLUMN height INT DEFAULT NULL AFTER age");
+        await runSafe('[M010] players.weight',
+            "ALTER TABLE players ADD COLUMN weight INT DEFAULT NULL AFTER height");
+        await runSafe('[M010] players.foot',
+            "ALTER TABLE players ADD COLUMN foot VARCHAR(50) DEFAULT 'Droit' AFTER weight");
+
         console.log('\n🎉 All migrations completed successfully!');
     } catch (error) {
         console.error('❌ Migration failed:', error.message);

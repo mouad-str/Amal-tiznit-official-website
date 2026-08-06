@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { API, Player } from '../../api';
-import { Upload, X, Check, Image as ImageIcon, AlertCircle, Trash2, Edit2, Plus, Search, Trophy, Shield, Activity } from 'lucide-react';
+import { Upload, X, Check, Image as ImageIcon, AlertCircle, Trash2, Edit2, Plus, Search, Trophy, Shield, Activity, Calendar, User, Scale, Ruler } from 'lucide-react';
 
 const ManagePlayers: React.FC = () => {
   const [players, setPlayers] = useState<Player[]>([]);
@@ -18,6 +18,11 @@ const ManagePlayers: React.FC = () => {
     team_category: 'Senior' as 'Senior' | 'U21' | 'Women',
     image_url: '',
     nationality: 'Moroccan',
+    birth_date: '',
+    age: '',
+    height: '',
+    weight: '',
+    foot: 'Droit' as 'Droit' | 'Gauche' | 'Ambidextre',
     matches_played: 0,
     goals: 0,
     assists: 0,
@@ -80,11 +85,27 @@ const ManagePlayers: React.FC = () => {
     reader.readAsDataURL(file);
   };
 
+  // Auto-calculate age from birth date if chosen
+  const handleBirthDateChange = (dateStr: string) => {
+    let computedAge = formData.age;
+    if (dateStr) {
+      const birth = new Date(dateStr);
+      const now = new Date();
+      let diff = now.getFullYear() - birth.getFullYear();
+      const m = now.getMonth() - birth.getMonth();
+      if (m < 0 || (m === 0 && now.getDate() < birth.getDate())) {
+        diff--;
+      }
+      if (diff > 0) computedAge = String(diff);
+    }
+    setFormData(prev => ({ ...prev, birth_date: dateStr, age: computedAge }));
+  };
+
   // Filter players by search
   const filteredPlayers = players.filter(p =>
     p.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
     p.position.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (p.team_category || 'Senior').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    ((p as any).team_category || 'Senior').toLowerCase().includes(searchTerm.toLowerCase()) ||
     String(p.number).includes(searchTerm)
   );
 
@@ -103,6 +124,9 @@ const ManagePlayers: React.FC = () => {
       const payload = {
         ...formData,
         number: Number(formData.number) || 1,
+        age: formData.age ? Number(formData.age) : null,
+        height: formData.height ? Number(formData.height) : null,
+        weight: formData.weight ? Number(formData.weight) : null,
         matches_played: Number(formData.matches_played) || 0,
         goals: Number(formData.goals) || 0,
         assists: Number(formData.assists) || 0,
@@ -152,6 +176,11 @@ const ManagePlayers: React.FC = () => {
       team_category: (player as any).team_category || 'Senior',
       image_url: player.image_url || '',
       nationality: player.nationality || 'Moroccan',
+      birth_date: (player as any).birth_date ? String((player as any).birth_date).slice(0, 10) : '',
+      age: (player as any).age ? String((player as any).age) : '',
+      height: (player as any).height ? String((player as any).height) : '',
+      weight: (player as any).weight ? String((player as any).weight) : '',
+      foot: (player as any).foot || 'Droit',
       matches_played: player.matches_played || 0,
       goals: player.goals || 0,
       assists: player.assists || 0,
@@ -166,6 +195,7 @@ const ManagePlayers: React.FC = () => {
   const resetForm = () => {
     setFormData({
       name: '', position: 'Midfielder', number: 1, team_category: 'Senior', image_url: '', nationality: 'Moroccan',
+      birth_date: '', age: '', height: '', weight: '', foot: 'Droit',
       matches_played: 0, goals: 0, assists: 0, minutes_played: 0, yellow_cards: 0, red_cards: 0
     });
     setErrorMsg(null);
@@ -186,7 +216,7 @@ const ManagePlayers: React.FC = () => {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 bg-white p-6 rounded-2xl border border-gray-100 shadow-sm">
         <div>
           <h2 className="text-xl font-black uppercase text-[#001226] font-display">Gestion Complète de l'Effectif</h2>
-          <p className="text-xs text-gray-500">Gérez le profil complet, la catégorie d'équipe et l'ensemble des statistiques de chaque joueur.</p>
+          <p className="text-xs text-gray-500">Gérez le profil complet, date de naissance, mensurations physiques et statistiques individuelles.</p>
         </div>
         <button 
           onClick={() => { resetForm(); setShowForm(true); }} 
@@ -204,9 +234,9 @@ const ManagePlayers: React.FC = () => {
             <div className="flex justify-between items-center pb-4 border-b border-gray-100 mb-6">
               <div>
                 <h3 className="text-lg font-black uppercase text-[#001226] font-display">
-                  {editingPlayer ? `Modifier Profil & Stats de ${editingPlayer.name}` : 'Créer Un Nouveau Joueur'}
+                  {editingPlayer ? `Modifier Profil Complete: ${editingPlayer.name}` : 'Créer Un Nouveau Joueur'}
                 </h3>
-                <span className="text-[10px] text-gray-400 font-medium">Édition des informations générales, équipe et statistiques individuelles</span>
+                <span className="text-[10px] text-gray-400 font-medium">Édition des données personnelles, mensurations physiques et statistiques</span>
               </div>
               <button onClick={() => { setShowForm(false); setEditingPlayer(null); resetForm(); }} className="text-gray-400 hover:text-gray-600 p-1">
                 <X size={20} />
@@ -287,13 +317,78 @@ const ManagePlayers: React.FC = () => {
                       className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-blue-600 outline-none" 
                     />
                   </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Pied Préférentiel</label>
+                    <select 
+                      value={formData.foot} 
+                      onChange={e => setFormData({ ...formData, foot: e.target.value as any })}
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs focus:ring-2 focus:ring-blue-600 outline-none"
+                    >
+                      <option value="Droit">Pied Droit (Right)</option>
+                      <option value="Gauche">Pied Gauche (Left)</option>
+                      <option value="Ambidextre">Ambidextre (Both)</option>
+                    </select>
+                  </div>
                 </div>
               </div>
 
-              {/* SECTION 2: PHOTO UPLOAD */}
+              {/* SECTION 2: DONNÉES BIOMÉTRIQUES & MENSURATIONS */}
+              <div className="space-y-4 pt-2 border-t border-gray-100">
+                <h4 className="text-xs font-bold uppercase tracking-wider text-purple-700 bg-purple-50 px-3 py-1.5 rounded-lg inline-block">
+                  2. Mensurations Physiques & Profil Bio
+                </h4>
+
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Date De Naissance</label>
+                    <input 
+                      type="date" 
+                      value={formData.birth_date} 
+                      onChange={e => handleBirthDateChange(e.target.value)}
+                      className="w-full border border-gray-200 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-blue-600 outline-none" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Âge (Ans)</label>
+                    <input 
+                      type="number" 
+                      value={formData.age} 
+                      onChange={e => setFormData({ ...formData, age: e.target.value })}
+                      placeholder="ex: 24"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs font-mono font-bold focus:ring-2 focus:ring-blue-600 outline-none" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Taille (cm)</label>
+                    <input 
+                      type="number" 
+                      value={formData.height} 
+                      onChange={e => setFormData({ ...formData, height: e.target.value })}
+                      placeholder="ex: 182"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs font-mono focus:ring-2 focus:ring-blue-600 outline-none" 
+                    />
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-gray-700 uppercase mb-1">Poids (kg)</label>
+                    <input 
+                      type="number" 
+                      value={formData.weight} 
+                      onChange={e => setFormData({ ...formData, weight: e.target.value })}
+                      placeholder="ex: 76"
+                      className="w-full border border-gray-200 rounded-xl px-4 py-2 text-xs font-mono focus:ring-2 focus:ring-blue-600 outline-none" 
+                    />
+                  </div>
+                </div>
+              </div>
+
+              {/* SECTION 3: PHOTO UPLOAD */}
               <div className="space-y-3 pt-2 border-t border-gray-100">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-blue-700 bg-blue-50 px-3 py-1.5 rounded-lg inline-block">
-                  2. Photo Officielle du Joueur
+                  3. Photo Officielle du Joueur
                 </h4>
 
                 <div className="flex items-center gap-4 p-3 bg-gray-50 rounded-xl border border-gray-100">
@@ -341,10 +436,10 @@ const ManagePlayers: React.FC = () => {
                 </div>
               </div>
 
-              {/* SECTION 3: STATISTIQUES DE SAISON */}
+              {/* SECTION 4: STATISTIQUES DE SAISON */}
               <div className="space-y-4 pt-2 border-t border-gray-100">
                 <h4 className="text-xs font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-lg inline-block">
-                  3. Statistiques Individuelles de Saison
+                  4. Statistiques Individuelles de Saison
                 </h4>
 
                 <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
@@ -461,9 +556,8 @@ const ManagePlayers: React.FC = () => {
             <thead className="bg-gray-50 border-b border-gray-100 text-[10px] font-bold text-gray-400 uppercase tracking-wider">
               <tr>
                 <th className="px-6 py-3.5">Joueur</th>
-                <th className="px-6 py-3.5">Catégorie</th>
-                <th className="px-6 py-3.5">Poste</th>
-                <th className="px-6 py-3.5">Numéro</th>
+                <th className="px-6 py-3.5">Bio & Mensurations</th>
+                <th className="px-6 py-3.5">Poste & Maillot</th>
                 <th className="px-6 py-3.5">Statistiques Clés</th>
                 <th className="px-6 py-3.5 text-right">Actions Admin</th>
               </tr>
@@ -483,23 +577,33 @@ const ManagePlayers: React.FC = () => {
                       </div>
                       <div>
                         <p className="font-bold text-[#001226] text-sm">{player.name}</p>
-                        <p className="text-[10px] text-gray-400 font-medium uppercase">{player.nationality || 'Moroccan'}</p>
+                        <span className={`text-[9px] font-bold uppercase px-2 py-0.5 rounded-full ${
+                          (player as any).team_category === 'U21' ? 'bg-amber-100 text-amber-800' :
+                          (player as any).team_category === 'Women' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
+                        }`}>
+                          {(player as any).team_category || 'Senior'}
+                        </span>
                       </div>
                     </div>
                   </td>
-                  <td className="px-6 py-4">
-                    <span className={`text-[9px] font-bold uppercase px-2.5 py-1 rounded-full ${
-                      (player as any).team_category === 'U21' ? 'bg-amber-100 text-amber-800' :
-                      (player as any).team_category === 'Women' ? 'bg-purple-100 text-purple-800' : 'bg-blue-100 text-blue-800'
-                    }`}>
-                      {(player as any).team_category || 'Senior'}
-                    </span>
+
+                  {/* Bio & Physical Metrics */}
+                  <td className="px-6 py-4 text-gray-600 font-mono text-[11px]">
+                    <div>{(player as any).age ? `${(player as any).age} ans` : '—'} • {(player as any).foot || 'Pied Droit'}</div>
+                    <div className="text-gray-400 text-[10px]">
+                      {(player as any).height ? `${(player as any).height} cm` : '—'} | {(player as any).weight ? `${(player as any).weight} kg` : '—'}
+                    </div>
                   </td>
-                  <td className="px-6 py-4 font-medium text-gray-700">{player.position}</td>
-                  <td className="px-6 py-4 font-black font-mono text-[#001226]">#{player.number}</td>
+
+                  <td className="px-6 py-4">
+                    <div className="font-medium text-gray-800">{player.position}</div>
+                    <div className="font-black font-mono text-blue-700">#{player.number}</div>
+                  </td>
+
                   <td className="px-6 py-4 font-mono text-gray-600">
                     <span className="font-bold text-blue-700">{player.goals || 0}G</span> / <span className="font-bold text-emerald-700">{player.assists || 0}A</span> • <span className="text-gray-400">{player.matches_played || 0} MJ</span>
                   </td>
+
                   <td className="px-6 py-4 text-right space-x-2">
                     <button 
                       onClick={() => handleEdit(player)} 

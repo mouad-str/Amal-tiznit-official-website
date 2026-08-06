@@ -35,6 +35,7 @@ const createPlayer = async (req, res) => {
     try {
         const {
             name, position, number, image_url, nationality, team_category,
+            birth_date, age, height, weight, foot,
             matches_played, goals, assists, minutes_played, yellow_cards, red_cards
         } = req.body;
 
@@ -42,10 +43,13 @@ const createPlayer = async (req, res) => {
 
         const [result] = await pool.query(
             `INSERT INTO players 
-            (name, position, number, image_url, nationality, team_category, matches_played, goals, assists, minutes_played, yellow_cards, red_cards)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-            [name, position, playerNum, image_url || '', nationality || 'Moroccan', team_category || 'Senior',
-                Number(matches_played) || 0, Number(goals) || 0, Number(assists) || 0, Number(minutes_played) || 0, Number(yellow_cards) || 0, Number(red_cards) || 0]
+            (name, position, number, image_url, nationality, team_category, birth_date, age, height, weight, foot, matches_played, goals, assists, minutes_played, yellow_cards, red_cards)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+            [
+                name, position, playerNum, image_url || '', nationality || 'Moroccan', team_category || 'Senior',
+                birth_date || null, age ? Number(age) : null, height ? Number(height) : null, weight ? Number(weight) : null, foot || 'Droit',
+                Number(matches_played) || 0, Number(goals) || 0, Number(assists) || 0, Number(minutes_played) || 0, Number(yellow_cards) || 0, Number(red_cards) || 0
+            ]
         );
 
         res.status(201).json({ id: result.insertId, message: 'Player created successfully' });
@@ -60,6 +64,7 @@ const updatePlayer = async (req, res) => {
     try {
         const {
             name, position, number, image_url, nationality, team_category,
+            birth_date, age, height, weight, foot,
             matches_played, goals, assists, minutes_played, yellow_cards, red_cards
         } = req.body;
 
@@ -68,11 +73,15 @@ const updatePlayer = async (req, res) => {
         const [result] = await pool.query(
             `UPDATE players SET 
             name = ?, position = ?, number = ?, image_url = ?, nationality = ?, team_category = ?,
+            birth_date = ?, age = ?, height = ?, weight = ?, foot = ?,
             matches_played = ?, goals = ?, assists = ?, minutes_played = ?, yellow_cards = ?, red_cards = ?
             WHERE id = ?`,
-            [name, position, playerNum, image_url || '', nationality || 'Moroccan', team_category || 'Senior',
+            [
+                name, position, playerNum, image_url || '', nationality || 'Moroccan', team_category || 'Senior',
+                birth_date || null, age ? Number(age) : null, height ? Number(height) : null, weight ? Number(weight) : null, foot || 'Droit',
                 Number(matches_played) || 0, Number(goals) || 0, Number(assists) || 0, Number(minutes_played) || 0, Number(yellow_cards) || 0, Number(red_cards) || 0,
-                req.params.id]
+                req.params.id
+            ]
         );
 
         if (result.affectedRows === 0) {
