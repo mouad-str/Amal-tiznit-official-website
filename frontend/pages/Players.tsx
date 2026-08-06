@@ -68,16 +68,11 @@ const Players: React.FC = () => {
                 const data = await API.players.getAll();
                 
                 const mappedPlayers: Player[] = data.map((p: APIPlayer) => {
-                    const dbBirth = (p as any).birth_date ? String((p as any).birth_date).slice(0, 10) : null;
+                    const dbBirth = (p as any).birth_date ? String((p as any).birth_date).slice(0, 10) : '';
                     const dbAge = (p as any).age;
                     const dbHeight = (p as any).height;
                     const dbWeight = (p as any).weight;
                     const dbFoot = (p as any).foot;
-
-                    const birthYear = 1997 + (p.number % 7);
-                    const heightCm = 175 + (p.number * 2 % 14);
-                    const weightKg = 68 + (p.number % 12);
-                    const isLeftFoot = p.number % 3 === 0;
 
                     return {
                         id: String(p.id),
@@ -87,20 +82,20 @@ const Players: React.FC = () => {
                         image: p.image_url,
                         nationality: p.nationality || 'Maroc 🇲🇦',
                         bio: {
-                            birthDate: dbBirth || `14 Mar ${birthYear}`,
-                            birthPlace: (p as any).birth_place || (p.number % 2 === 0 ? 'Tiznit, Maroc' : 'Agadir, Maroc'),
-                            height: dbHeight ? `${dbHeight} cm` : `${heightCm} cm`,
-                            weight: dbWeight ? `${dbWeight} kg` : `${weightKg} kg`,
-                            foot: dbFoot || (isLeftFoot ? 'Gaucher' : 'Droitier'),
+                            birthDate: dbBirth ? new Date(dbBirth).toLocaleDateString('fr-FR', { day: 'numeric', month: 'short', year: 'numeric' }) : '—',
+                            birthPlace: (p as any).birth_place || 'Tiznit, Maroc',
+                            height: dbHeight ? `${dbHeight} cm` : '—',
+                            weight: dbWeight ? `${dbWeight} kg` : '—',
+                            foot: dbFoot || 'Droitier',
                             nationality: p.nationality || 'Maroc 🇲🇦'
                         },
                         stats: {
-                            matchesPlayed: p.matches_played || 0,
-                            goals: p.goals || 0,
-                            assists: p.assists || 0,
-                            minutesPlayed: p.minutes_played || 0,
-                            yellowCards: p.yellow_cards || 0,
-                            redCards: p.red_cards || 0
+                            matchesPlayed: Number(p.matches_played) || 0,
+                            goals: Number(p.goals) || 0,
+                            assists: Number(p.assists) || 0,
+                            minutesPlayed: Number(p.minutes_played) || 0,
+                            yellowCards: Number(p.yellow_cards) || 0,
+                            redCards: Number(p.red_cards) || 0
                         }
                     };
                 });
@@ -109,13 +104,8 @@ const Players: React.FC = () => {
                 setError(null);
             } catch (err) {
                 console.error('Failed to fetch players:', err);
-                setError('Failed to load players.');
-                setPlayers([
-                    { id: '1', name: 'Karim Alaoui', position: 'Goalkeeper', number: 1, image: '/Assets/bg.jpg', nationality: 'Maroc 🇲🇦', bio: { birthDate: '12 Jan 1996', birthPlace: 'Tiznit', height: '188 cm', weight: '82 kg', foot: 'Droitier', nationality: 'Maroc 🇲🇦' }, stats: { matchesPlayed: 22, goals: 0, assists: 1, minutesPlayed: 1980, yellowCards: 1, redCards: 0 } },
-                    { id: '2', name: 'Youssef El Amrani', position: 'Defender', number: 4, image: '/Assets/bg2.jpg', nationality: 'Maroc 🇲🇦', bio: { birthDate: '05 Nov 1998', birthPlace: 'Tiznit', height: '184 cm', weight: '78 kg', foot: 'Droitier', nationality: 'Maroc 🇲🇦' }, stats: { matchesPlayed: 19, goals: 2, assists: 1, minutesPlayed: 1650, yellowCards: 3, redCards: 0 } },
-                    { id: '3', name: 'Mehdi Benkirane', position: 'Midfielder', number: 10, image: '/Assets/bg1.jpg', nationality: 'Maroc 🇲🇦', bio: { birthDate: '22 Juin 1999', birthPlace: 'Agadir', height: '178 cm', weight: '72 kg', foot: 'Gaucher', nationality: 'Maroc 🇲🇦' }, stats: { matchesPlayed: 20, goals: 8, assists: 6, minutesPlayed: 1720, yellowCards: 2, redCards: 0 } },
-                    { id: '4', name: 'Sofiane Rahimi', position: 'Forward', number: 9, image: '/Assets/bg2.jpg', nationality: 'Maroc 🇲🇦', bio: { birthDate: '18 Sep 2000', birthPlace: 'Casablanca', height: '181 cm', weight: '75 kg', foot: 'Droitier', nationality: 'Maroc 🇲🇦' }, stats: { matchesPlayed: 21, goals: 14, assists: 4, minutesPlayed: 1810, yellowCards: 1, redCards: 0 } },
-                ]);
+                setError('Impossible de charger l\'effectif depuis le serveur.');
+                setPlayers([]);
             } finally {
                 setLoading(false);
             }
