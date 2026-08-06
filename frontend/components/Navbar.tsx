@@ -31,7 +31,8 @@ export default function Navbar() {
 
   const utilityLinks = [
     { name: 'LA BOUTIQUE', icon: ShoppingBag, path: '/shop' },
-    { name: 'TICKETS', icon: Ticket, path: '/tickets' },
+    { name: 'BILLETTERIE', icon: Ticket, path: '/tickets' },
+    { name: 'CARTE MEMBRE', icon: Ticket, path: '/membership' },
   ];
 
   return (

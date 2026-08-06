@@ -16,6 +16,7 @@ import CartPage from './pages/CartPage';
 import WishlistPage from './pages/WishlistPage';
 import CheckoutPage from './pages/CheckoutPage';
 import TrackOrderPage from './pages/TrackOrderPage';
+import Membership from './pages/Membership';
 import ScrollToTop from './components/ScrollToTop';
 import SplashScreen from './components/SplashScreen';
 import AdminLayout from './components/AdminLayout';
@@ -60,6 +61,7 @@ const App: React.FC = () => {
             <Route path="/news/:id" element={<MainLayout><NewsDetail /></MainLayout>} />
             <Route path="/contact" element={<MainLayout><Contact /></MainLayout>} />
             <Route path="/tickets" element={<MainLayout><Tickets /></MainLayout>} />
+            <Route path="/membership" element={<MainLayout><Membership /></MainLayout>} />
             <Route path="/shop" element={<MainLayout><Shop /></MainLayout>} />
             <Route path="/shop/cart" element={<MainLayout><CartPage /></MainLayout>} />
             <Route path="/shop/wishlist" element={<MainLayout><WishlistPage /></MainLayout>} />

@@ -87,6 +87,40 @@ async function migrate() {
             )
         `);
 
+        // M007 — Create Memberships Table
+        await runSafe('[M007] memberships table', `
+            CREATE TABLE IF NOT EXISTS memberships (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                member_id_code VARCHAR(100) NOT NULL UNIQUE,
+                full_name VARCHAR(255) NOT NULL,
+                email VARCHAR(255) NOT NULL,
+                phone VARCHAR(50) NOT NULL,
+                tier VARCHAR(50) NOT NULL DEFAULT 'Bronze',
+                discount_percent INT NOT NULL DEFAULT 10,
+                active BOOLEAN DEFAULT TRUE,
+                expires_at DATE,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
+        // M008 — Create Ticket Bookings Table
+        await runSafe('[M008] ticket_bookings table', `
+            CREATE TABLE IF NOT EXISTS ticket_bookings (
+                id INT AUTO_INCREMENT PRIMARY KEY,
+                booking_ref VARCHAR(100) NOT NULL UNIQUE,
+                match_id INT NOT NULL,
+                category VARCHAR(100) NOT NULL,
+                seat_zone VARCHAR(100) NOT NULL,
+                quantity INT NOT NULL DEFAULT 1,
+                total_price DECIMAL(10,2) NOT NULL,
+                customer_name VARCHAR(255) NOT NULL,
+                customer_phone VARCHAR(50) NOT NULL,
+                customer_email VARCHAR(255) NOT NULL,
+                status VARCHAR(50) DEFAULT 'confirmed',
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        `);
+
         console.log('\n🎉 All migrations completed successfully!');
     } catch (error) {
         console.error('❌ Migration failed:', error.message);

@@ -61,6 +61,14 @@ export const API = {
         create: (data: Partial<Ticket>) => apiFetch<{ id: number }>('/tickets', { method: 'POST', body: JSON.stringify(data) }),
         update: (id: number, data: Partial<Ticket>) => apiFetch<void>(`/tickets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
         delete: (id: number) => apiFetch<void>(`/tickets/${id}`, { method: 'DELETE' }),
+        book: (data: { match_id: number; category: string; seat_zone: string; quantity: number; total_price: number; customer_name: string; customer_phone: string; customer_email: string }) =>
+            apiFetch<any>('/tickets/book', { method: 'POST', body: JSON.stringify(data) }),
+    },
+    memberships: {
+        create: (data: { full_name: string; email: string; phone: string; tier: string }) =>
+            apiFetch<any>('/memberships', { method: 'POST', body: JSON.stringify(data) }),
+        getByCode: (code: string) => apiFetch<any>(`/memberships/code/${encodeURIComponent(code)}`),
+        getAll: () => apiFetch<any[]>('/memberships', { headers: { Authorization: `Bearer ${localStorage.getItem('adminToken')}` } }),
     },
     contact: {
         getAll: () => apiFetch<ContactMessage[]>('/contact'),

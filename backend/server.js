@@ -13,6 +13,7 @@ const ticketsRoutes = require('./routes/tickets');
 const contactRoutes = require('./routes/contact');
 const settingsRoutes = require('./routes/settings');
 const ordersRoutes = require('./routes/orders');
+const membershipsRoutes = require('./routes/memberships');
 const authRoutes = require('./routes/auth');
 
 const app = express();
@@ -51,6 +52,7 @@ app.use('/api/tickets', ticketsRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/settings', settingsRoutes);
 app.use('/api/orders', ordersRoutes);
+app.use('/api/memberships', membershipsRoutes);
 app.use('/api/auth', authRoutes);
 
 // Root redirect → frontend
