@@ -105,8 +105,109 @@ const getMe = async (req, res) => {
     }
 };
 
+// Register User / Admin
+const register = async (req, res) => {
+    try {
+        const { name, email, password } = req.body;
+
+        if (!name || !email || !password) {
+            return res.status(400).json({ error: 'Tous les champs sont obligatoires.' });
+        }
+
+        // Check if email exists
+        const [existing] = await pool.query('SELECT id FROM admins WHERE email = ?', [email]);
+        if (existing.length > 0) {
+            return res.status(400).json({ error: 'Un compte avec cet email existe déjà.' });
+        }
+
+        // Hash password
+        const salt = await bcrypt.genSalt(10);
+        const hashedPassword = await bcrypt.hash(password, salt);
+
+        // Insert new admin user
+        const [result] = await pool.query(
+            'INSERT INTO admins (name, email, password, role) VALUES (?, ?, ?, ?)',
+            [name, email, hashedPassword, 'editor']
+        );
+
+        // Generate Token
+        const token = jwt.sign(
+            { id: result.insertId, role: 'editor', name, email },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.status(201).json({
+            token,
+            user: {
+                id: result.insertId,
+                name,
+                email,
+                role: 'editor'
+            }
+        });
+
+    } catch (error) {
+        console.error('Registration error:', error);
+        res.status(500).json({ error: 'Échec de la création de compte sur le serveur.' });
+    }
+};
+
+// Google Authentication / Login
+const googleLogin = async (req, res) => {
+    try {
+        const { name, email, googleId } = req.body;
+
+        if (!email) {
+            return res.status(400).json({ error: 'Adresse email Google non disponible' });
+        }
+
+        // Check if user exists
+        let [rows] = await pool.query('SELECT * FROM admins WHERE email = ?', [email]);
+        let user;
+
+        if (rows.length === 0) {
+            // Auto register Google user
+            const dummyPassword = await bcrypt.hash(googleId || 'google_auth_secret_' + Date.now(), 10);
+            const [result] = await pool.query(
+                'INSERT INTO admins (name, email, password, role) VALUES (?, ?, ?, ?)',
+                [name || 'Utilisateur Google', email, dummyPassword, 'editor']
+            );
+            user = { id: result.insertId, name: name || 'Utilisateur Google', email, role: 'editor' };
+        } else {
+            user = rows[0];
+        }
+
+        // Update last login
+        await pool.query('UPDATE admins SET last_login = NOW() WHERE id = ?', [user.id]);
+
+        // Generate Token
+        const token = jwt.sign(
+            { id: user.id, role: user.role, name: user.name, email: user.email },
+            JWT_SECRET,
+            { expiresIn: '24h' }
+        );
+
+        res.json({
+            token,
+            user: {
+                id: user.id,
+                name: user.name,
+                email: user.email,
+                role: user.role
+            }
+        });
+
+    } catch (error) {
+        console.error('Google auth error:', error);
+        res.status(500).json({ error: 'Erreur d\'authentification Google' });
+    }
+};
+
 module.exports = {
     login,
+    register,
+    googleLogin,
     updateProfile,
     getMe,
     JWT_SECRET
