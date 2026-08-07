@@ -11,8 +11,8 @@
      1. COLOR SYSTEM (60-25-10-5 Rule)
      ------------------------------------------------------------------------ */
   /* Primary Club Color (10%) - Deep Athletic Royal Blue */
-  --color-primary: #002D62;
-  --color-primary-dark: #001938;
+  --color-primary: #2c4e74;
+  --color-primary-dark: #0019381e;
   --color-primary-light: #004B99;
   --color-primary-rgb: 0, 45, 98;
 
@@ -23,8 +23,8 @@
   --color-accent-crimson: #9E1B1B;
 
   /* Neutral Backgrounds (60%) & Dark Surfaces (25%) */
-  --color-background: #040914;
-  --color-surface: #0E182A;
+  --color-background: #4e89ef;
+  --color-surface: #656e7f;
   --color-surface-secondary: #16243D;
   --color-surface-border: #1C2E4A;
 
