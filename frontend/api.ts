@@ -10,14 +10,27 @@ export const API_BASE_URL = 'http://localhost:5000/api';
  */
 export const apiFetch = async <T>(endpoint: string, options?: RequestInit): Promise<T> => {
     const response = await fetch(`${API_BASE_URL}${endpoint}`, {
+        ...options,
         headers: {
             'Content-Type': 'application/json',
+            ...(options?.headers || {}),
         },
-        ...options,
     });
 
     if (!response.ok) {
-        throw new Error(`API Error: ${response.status} ${response.statusText}`);
+        let errorMsg = `API Error: ${response.status} ${response.statusText}`;
+        try {
+            const body = await response.json();
+            if (body && body.error) {
+                errorMsg = body.error;
+            }
+        } catch (_) {}
+        throw new Error(errorMsg);
+    }
+
+    // Handle empty or 204 responses
+    if (response.status === 204) {
+        return {} as T;
     }
 
     return response.json();
