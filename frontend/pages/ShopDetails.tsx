@@ -42,11 +42,11 @@ interface CartItem {
 }
 
 const SQUAD_STAR_PLAYERS = [
-    { id: 1, name: 'CHAHBOUN', number: '10', pos: 'Milieu Offensif' },
-    { id: 2, name: 'EL AMRAOUI', number: '7', pos: 'Attaquant' },
-    { id: 3, name: 'BAHBAH', number: '9', pos: 'Avant-Centre' },
-    { id: 4, name: 'BENALI', number: '8', pos: 'Milieu de terrain' },
-    { id: 5, name: 'TOURI', number: '1', pos: 'Gardien de but' }
+    { id: 1, name: 'RAHIMI', number: '9', pos: 'Attaquant Star' },
+    { id: 2, name: 'EL KAABI', number: '17', pos: 'Buteur' },
+    { id: 3, name: 'BENKIRANE', number: '10', pos: 'Milieu Créatif' },
+    { id: 4, name: 'EL AMRANI', number: '4', pos: 'Défenseur & Capitaine' },
+    { id: 5, name: 'ZNITI', number: '22', pos: 'Gardien de But' }
 ];
 
 const CART_KEY = 'usat_shop_cart';
@@ -250,7 +250,8 @@ const ShopDetails: React.FC = () => {
                     product_id: i.productId,
                     quantity: i.quantity,
                     size: i.size,
-                    flocage: i.flocageName ? `${i.flocageName} #${i.flocageNumber}` : null
+                    flocage: i.flocageName ? `${i.flocageName} #${i.flocageNumber}` : null,
+                    has_patch: i.hasPatch ? 1 : 0
                 }))
             });
 
@@ -322,19 +323,55 @@ const ShopDetails: React.FC = () => {
                                 className={`w-full h-full object-cover transition-transform duration-700 ${activeView === 'back' && flocageOption !== 'none' ? 'brightness-50' : 'group-hover:scale-105'}`}
                             />
 
-                            {/* Real-time Flocage Back Preview (Real Madrid Style) */}
-                            {activeView === 'back' && flocageOption !== 'none' && (
-                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center bg-[#001226]/85 backdrop-blur-xs p-6 border-4 border-[#D4AF37]/50">
-                                    <span className="text-gray-400 text-xs font-bold uppercase tracking-[0.3em] mb-2 font-display">US AMAL TIZNIT</span>
-                                    <span className="text-4xl sm:text-6xl font-black font-display text-white tracking-widest drop-shadow-2xl uppercase mb-2">
-                                        {flocageOption === 'player' ? selectedPlayerFlocage.name : (customName || 'VOTRE NOM')}
-                                    </span>
-                                    <span className="text-8xl sm:text-9xl font-black font-mono text-[#D4AF37] drop-shadow-2xl">
-                                        {flocageOption === 'player' ? selectedPlayerFlocage.number : (customNumber || '10')}
-                                    </span>
-                                    <span className="mt-4 text-xs font-bold text-amber-300 border border-amber-400/30 px-4 py-1.5 rounded-full uppercase font-display bg-amber-500/10">
-                                        FLOCAGE OFFICIEL BOTOLA PRO 🇲🇦
-                                    </span>
+                            {/* Real-time Flocage Back Preview (USAT Elite Mockup) */}
+                            {activeView === 'back' && (
+                                <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none text-center bg-[#040914]/90 backdrop-blur-xs p-4 z-10">
+                                    {/* Virtual Jersey Silhouette Card */}
+                                    <div className="w-full max-w-[260px] aspect-[3/4] relative bg-[#002D62] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col justify-between py-6 px-4">
+                                        {/* Jersey details: Collar / Stripes */}
+                                        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-4 bg-[#9E1B1B] rounded-b-2xl border-x-2 border-[#D4AF37]"></div>
+                                        <div className="absolute top-0 left-0 right-0 h-0.5 bg-[#D4AF37]"></div>
+                                        
+                                        {/* Club Watermark */}
+                                        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-32 h-32 opacity-10">
+                                            <img src="/Assets/logo.png" alt="" className="w-full h-full object-contain" />
+                                        </div>
+
+                                        <div className="relative z-10 flex flex-col items-center mt-2">
+                                            <span className="text-[#F8FAFC]/55 text-[8px] font-black uppercase tracking-[0.25em] mb-1 font-display">US AMAL TIZNIT</span>
+                                            
+                                            {flocageOption !== 'none' ? (
+                                                <h3 className="text-xl sm:text-2xl font-black font-display text-white tracking-widest uppercase drop-shadow-[0_2px_5px_rgba(0,0,0,0.5)]">
+                                                    {flocageOption === 'player' ? selectedPlayerFlocage.name : (customName || 'VOTRE NOM')}
+                                                </h3>
+                                            ) : (
+                                                <span className="text-[10px] text-white/40 font-bold uppercase tracking-wider italic">(Sans Flocage)</span>
+                                            )}
+                                        </div>
+
+                                        <div className="relative z-10 flex flex-col items-center justify-center">
+                                            {flocageOption !== 'none' ? (
+                                                <div className="text-6xl sm:text-7xl font-black font-display text-[#D4AF37] drop-shadow-[0_5px_10px_rgba(0,0,0,0.5)] tracking-tighter">
+                                                    {flocageOption === 'player' ? selectedPlayerFlocage.number : (customNumber || '10')}
+                                                </div>
+                                            ) : (
+                                                <div className="w-10 h-10 rounded-full border-2 border-dashed border-white/20 flex items-center justify-center text-white/30 text-[10px] font-bold">
+                                                    USAT
+                                                </div>
+                                            )}
+                                        </div>
+
+                                        <div className="relative z-10 flex flex-col items-center">
+                                            {addPatch && (
+                                                <div className="inline-flex items-center gap-1 bg-[#9E1B1B] text-white text-[7px] font-black uppercase tracking-wider px-2 py-0.5 rounded border border-amber-400/40 mb-1.5">
+                                                    Badge Inwi Pro 🇲🇦
+                                                </div>
+                                            )}
+                                            <span className="text-amber-400/80 text-[8px] font-black uppercase tracking-widest">
+                                                FLOCAGE OFFICIEL USAT
+                                            </span>
+                                        </div>
+                                    </div>
                                 </div>
                             )}
 
