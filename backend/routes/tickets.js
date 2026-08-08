@@ -5,13 +5,15 @@ const {
     getAllTickets,
     createTicket,
     updateTicket,
-    deleteTicket
+    deleteTicket,
+    bookTickets
 } = require('../controllers/ticketsController');
 
 // Routes
 router.get('/', getAllTickets);
 router.get('/match/:matchId', getTicketsByMatch);
 router.post('/', createTicket);
+router.post('/book', bookTickets);
 router.put('/:id', updateTicket);
 router.delete('/:id', deleteTicket);
 

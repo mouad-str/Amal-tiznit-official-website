@@ -87,10 +87,81 @@ const deleteTicket = async (req, res) => {
     }
 };
 
+// POST book tickets (with SQL transaction)
+const bookTickets = async (req, res) => {
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        const { ticket_id, customer_name, customer_email, customer_phone, quantity } = req.body;
+
+        if (!ticket_id || !customer_name || !customer_email || !customer_phone || !quantity) {
+            await connection.rollback();
+            return res.status(400).json({ error: 'Tous les champs de réservation sont obligatoires' });
+        }
+
+        if (parseInt(quantity) <= 0) {
+            await connection.rollback();
+            return res.status(400).json({ error: 'Quantité invalide' });
+        }
+
+        // 1. Fetch ticket and lock row
+        const [tickets] = await connection.query(
+            'SELECT * FROM tickets WHERE id = ? FOR UPDATE',
+            [ticket_id]
+        );
+
+        if (tickets.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ error: 'Catégorie de billet introuvable' });
+        }
+
+        const ticket = tickets[0];
+
+        // 2. Check stock availability
+        if (ticket.quantity_available < quantity) {
+            await connection.rollback();
+            return res.status(400).json({ error: 'Nombre de billets disponibles insuffisant' });
+        }
+
+        // 3. Decrement quantity_available
+        const newQuantity = ticket.quantity_available - quantity;
+        await connection.query(
+            'UPDATE tickets SET quantity_available = ? WHERE id = ?',
+            [newQuantity, ticket_id]
+        );
+
+        // 4. Record ticket reservation
+        const totalPrice = ticket.price * quantity;
+        const [result] = await connection.query(
+            `INSERT INTO ticket_bookings (ticket_id, customer_name, customer_email, customer_phone, quantity, total_price, status)
+             VALUES (?, ?, ?, ?, ?, ?, 'paid')`,
+            [ticket_id, customer_name, customer_email, customer_phone, quantity, totalPrice]
+        );
+
+        await connection.commit();
+
+        res.status(201).json({
+            message: 'Réservation complétée avec succès !',
+            bookingId: result.insertId,
+            totalPrice,
+            ticketCategory: ticket.seat_category
+        });
+
+    } catch (error) {
+        await connection.rollback();
+        console.error('Error during ticket booking transaction:', error);
+        res.status(500).json({ error: 'Échec de la réservation sur le serveur' });
+    } finally {
+        connection.release();
+    }
+};
+
 module.exports = {
     getTicketsByMatch,
     getAllTickets,
     createTicket,
     updateTicket,
-    deleteTicket
+    deleteTicket,
+    bookTickets
 };

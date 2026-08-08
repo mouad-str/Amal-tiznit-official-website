@@ -180,6 +180,23 @@ const initDatabase = async () => {
         `);
         console.log('  ✅ ticket_settings');
 
+        // Ticket Bookings Table
+        await connection.query(`
+            CREATE TABLE IF NOT EXISTS ticket_bookings (
+                id             INT AUTO_INCREMENT PRIMARY KEY,
+                ticket_id      INT NOT NULL,
+                customer_name  VARCHAR(255) NOT NULL,
+                customer_email VARCHAR(255) NOT NULL,
+                customer_phone VARCHAR(50) NOT NULL,
+                quantity       INT NOT NULL,
+                total_price    DECIMAL(10,2) NOT NULL,
+                booking_date   TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                status         VARCHAR(50) DEFAULT 'paid',
+                FOREIGN KEY (ticket_id) REFERENCES tickets(id) ON DELETE CASCADE
+            )
+        `);
+        console.log('  ✅ ticket_bookings');
+
         console.log('\n🌱 Seeding realistic testing data…');
 
         // Refresh & Seed Players

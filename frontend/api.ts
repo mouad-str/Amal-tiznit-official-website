@@ -61,6 +61,8 @@ export const API = {
         create: (data: Partial<Ticket>) => apiFetch<{ id: number }>('/tickets', { method: 'POST', body: JSON.stringify(data) }),
         update: (id: number, data: Partial<Ticket>) => apiFetch<void>(`/tickets/${id}`, { method: 'PUT', body: JSON.stringify(data) }),
         delete: (id: number) => apiFetch<void>(`/tickets/${id}`, { method: 'DELETE' }),
+        book: (data: { ticket_id: number; customer_name: string; customer_email: string; customer_phone: string; quantity: number }) => 
+            apiFetch<{ message: string; bookingId: number; totalPrice: number; ticketCategory: string }>('/tickets/book', { method: 'POST', body: JSON.stringify(data) }),
     },
     contact: {
         getAll: () => apiFetch<ContactMessage[]>('/contact'),

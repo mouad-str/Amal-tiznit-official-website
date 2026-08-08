@@ -115,24 +115,82 @@ const getAllOrders = async (req, res) => {
 
 // PUT update order status
 const updateOrderStatus = async (req, res) => {
+    const connection = await pool.getConnection();
     try {
+        await connection.beginTransaction();
+
         const { status } = req.body;
+        const orderId = req.params.id;
         const validStatuses = ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'];
 
         if (!validStatuses.includes(status)) {
-            return res.status(400).json({ error: 'Invalid status' });
+            await connection.rollback();
+            return res.status(400).json({ error: 'Statut de commande invalide' });
         }
 
-        const [result] = await pool.query('UPDATE orders SET status = ? WHERE id = ?', [status, req.params.id]);
-
-        if (result.affectedRows === 0) {
-            return res.status(404).json({ error: 'Order not found' });
+        // 1. Fetch current order details and status
+        const [orders] = await connection.query('SELECT status FROM orders WHERE id = ? FOR UPDATE', [orderId]);
+        if (orders.length === 0) {
+            await connection.rollback();
+            return res.status(404).json({ error: 'Commande introuvable' });
         }
 
-        res.json({ message: 'Order status updated' });
+        const oldStatus = orders[0].status;
+
+        // If status hasn't changed, just return success
+        if (oldStatus === status) {
+            await connection.commit();
+            return res.json({ message: 'Statut de la commande inchangé' });
+        }
+
+        // 2. Load order items
+        const [items] = await connection.query('SELECT product_id, quantity FROM order_items WHERE order_id = ?', [orderId]);
+
+        // 3. Handle stock reconciliation
+        if (status === 'cancelled' && oldStatus !== 'cancelled') {
+            // Restore product stock
+            for (const item of items) {
+                await connection.query(
+                    'UPDATE products SET stock = stock + ? WHERE id = ?',
+                    [item.quantity, item.product_id]
+                );
+            }
+        } else if (oldStatus === 'cancelled' && status !== 'cancelled') {
+            // Deduct stock again, verifying availability
+            for (const item of items) {
+                const [productRows] = await connection.query(
+                    'SELECT stock, name FROM products WHERE id = ? FOR UPDATE',
+                    [item.product_id]
+                );
+                if (productRows.length === 0) {
+                    await connection.rollback();
+                    return res.status(404).json({ error: 'Un article de la commande n\'existe plus' });
+                }
+                const product = productRows[0];
+                if (product.stock < item.quantity) {
+                    await connection.rollback();
+                    return res.status(400).json({ error: `Stock insuffisant pour réactiver la commande (${product.name})` });
+                }
+
+                await connection.query(
+                    'UPDATE products SET stock = stock - ? WHERE id = ?',
+                    [item.quantity, item.product_id]
+                );
+            }
+        }
+
+        // 4. Update status
+        await connection.query('UPDATE orders SET status = ? WHERE id = ?', [status, orderId]);
+
+        await connection.commit();
+        res.json({ message: 'Statut de la commande mis à jour avec succès' });
+
     } catch (error) {
-        console.error('Error updating order:', error);
-        res.status(500).json({ error: 'Failed to update order' });
+        await connection.rollback();
+        console.error('Error updating order status:', error);
+        res.status(500).json({ error: 'Échec de la mise à jour du statut de la commande' });
+    } finally {
+        connection.release();
     }
 };
 

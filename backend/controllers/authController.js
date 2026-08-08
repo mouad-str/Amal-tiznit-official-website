@@ -1,6 +1,9 @@
 const { pool } = require('../config/db');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
+
+const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
 
 const JWT_SECRET = process.env.JWT_SECRET || 'your_super_secret_jwt_key_change_in_prod';
 
@@ -156,7 +159,49 @@ const register = async (req, res) => {
 // Google Authentication / Login
 const googleLogin = async (req, res) => {
     try {
-        const { name, email, googleId } = req.body;
+        const { credential } = req.body;
+
+        if (!credential) {
+            return res.status(400).json({ error: 'Token Google manquant' });
+        }
+
+        let email, name, googleId;
+
+        if (process.env.GOOGLE_CLIENT_ID) {
+            // Real Google Verification
+            try {
+                const ticket = await client.verifyIdToken({
+                    idToken: credential,
+                    audience: process.env.GOOGLE_CLIENT_ID,
+                });
+                const payload = ticket.getPayload();
+                email = payload.email;
+                name = payload.name;
+                googleId = payload.sub;
+            } catch (verifyErr) {
+                console.error('Google token verification failed:', verifyErr);
+                return res.status(401).json({ error: 'Token Google invalide ou expiré' });
+            }
+        } else {
+            // Mock/Demo Verification (for local development without credentials)
+            console.warn('⚠️ GOOGLE_CLIENT_ID is not configured in .env. Falling back to development mock login.');
+            if (credential.startsWith('{')) {
+                try {
+                    const parsed = JSON.parse(credential);
+                    email = parsed.email;
+                    name = parsed.name;
+                    googleId = parsed.googleId;
+                } catch {
+                    email = 'user.google@amaltiznit.ma';
+                    name = 'Utilisateur Google';
+                    googleId = 'google_mock_id';
+                }
+            } else {
+                email = 'user.google@amaltiznit.ma';
+                name = 'Utilisateur Google';
+                googleId = 'google_mock_id';
+            }
+        }
 
         if (!email) {
             return res.status(400).json({ error: 'Adresse email Google non disponible' });
@@ -200,7 +245,7 @@ const googleLogin = async (req, res) => {
 
     } catch (error) {
         console.error('Google auth error:', error);
-        res.status(500).json({ error: 'Erreur d\'authentification Google' });
+        res.status(500).json({ error: 'Erreur interne lors de la connexion Google' });
     }
 };
 
